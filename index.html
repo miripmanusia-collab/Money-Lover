@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dompetku — Money Management</title>
+<style>
+  :root {
+    --bg:#ffffff;--bg2:#f5f5f4;--bg3:#efede8;
+    --text:#1a1a1a;--text2:#6b7280;--text3:#9ca3af;
+    --border:rgba(0,0,0,0.1);--border2:rgba(0,0,0,0.18);
+    --radius:8px;--radius-lg:12px;
+    --green:#1D9E75;--green-dark:#0F6E56;--green-light:#E1F5EE;--green-text:#085041;
+    --blue:#378ADD;--blue-dark:#185FA5;--blue-light:#E6F1FB;--blue-text:#0C447C;
+    --red:#D85A30;--red-light:#FAECE7;--red-text:#4A1B0C;
+    --amber:#BA7517;--amber-light:#FAEEDA;--amber-text:#412402;
+    --gray:#888780;--gray-light:#F1EFE8;--gray-text:#444441;
+  }
+  @media(prefers-color-scheme:dark){
+    :root{
+      --bg:#1c1c1e;--bg2:#2c2c2e;--bg3:#3a3a3c;
+      --text:#f2f2f7;--text2:#aeaeb2;--text3:#636366;
+      --border:rgba(255,255,255,0.1);--border2:rgba(255,255,255,0.2);
+      --green-light:#0a2e1f;--green-text:#9FE1CB;
+      --blue-light:#0a1f35;--blue-text:#85B7EB;
+      --red-light:#2e1208;--red-text:#F0997B;
+      --amber-light:#2e1e00;--amber-text:#FAC775;
+      --gray-light:#2c2c2e;--gray-text:#B4B2A9;
+    }
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg3);color:var(--text);min-height:100vh}
+  #app{max-width:980px;margin:0 auto;padding:1.25rem}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:8px}
+  .brand{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.5px}
+  .brand span{color:var(--green)}
+  .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--gray);display:inline-block;margin-left:6px;vertical-align:middle;transition:background .3s}
+  .sync-dot.ok{background:var(--green)}
+  .sync-dot.err{background:var(--red)}
+  .sync-dot.loading{background:var(--amber);animation:pulse 1s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .acts{display:flex;gap:6px;flex-wrap:wrap}
+  .btn{font-size:13px;padding:7px 14px;border-radius:var(--radius);border:.5px solid var(--border2);background:var(--bg);color:var(--text);cursor:pointer;transition:background .15s}
+  .btn:hover{background:var(--bg2)}
+  .btn-g{background:var(--green);color:#fff;border-color:var(--green)}.btn-g:hover{background:var(--green-dark)}
+  .btn-b{background:var(--blue);color:#fff;border-color:var(--blue)}.btn-b:hover{background:var(--blue-dark)}
+  .btn-sm{font-size:12px;padding:5px 10px}
+  .btn-xs{font-size:11px;padding:3px 8px}
+  .wallet-strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;margin-bottom:1.25rem;align-items:flex-start}
+  .wallet-strip::-webkit-scrollbar{height:4px}
+  .wallet-strip::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+  .wcard{min-width:155px;max-width:175px;flex-shrink:0;border-radius:var(--radius-lg);border:1.5px solid var(--border);padding:12px;cursor:pointer;position:relative;background:var(--bg);transition:border-color .15s}
+  .wcard:hover{border-color:var(--border2)}
+  .wcard.sel{border-color:var(--wc,var(--green))}
+  .wdot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;margin-bottom:8px}
+  .wname{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+  .wbal{font-size:15px;font-weight:600;margin-bottom:2px}
+  .wtype{font-size:11px;color:var(--text3)}
+  .whid{font-size:10px;padding:1px 5px;border-radius:99px;background:var(--gray-light);color:var(--gray-text);font-weight:500;margin-left:4px}
+  .wdel{position:absolute;top:6px;right:6px;font-size:14px;background:none;border:none;color:var(--text3);cursor:pointer;opacity:0;padding:2px 4px;border-radius:4px}
+  .wcard:hover .wdel{opacity:1}
+  .wdel:hover{background:var(--red-light);color:var(--red-text)}
+  .wadd{min-width:110px;border-radius:var(--radius-lg);border:1.5px dashed var(--border2);padding:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:var(--text3);flex-shrink:0;background:transparent;transition:background .15s}
+  .wadd:hover{background:var(--bg2)}
+  .wbtns{display:flex;gap:4px;margin-top:8px}
+  .sub-wrap{padding-left:12px;border-left:2px solid var(--border2);margin-top:6px;display:flex;flex-direction:column;gap:6px}
+  .wcard-sub{min-width:140px;max-width:160px;padding:9px 10px}
+  .env-section{background:var(--bg2);border:.5px solid var(--border);border-radius:0 0 var(--radius-lg) var(--radius-lg);padding:8px 10px;margin-top:-2px}
+  .env-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .env-row:last-child{margin-bottom:0}
+  .env-name{font-size:11px;color:var(--text2);min-width:75px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .env-track{flex:1;height:5px;background:var(--border);border-radius:99px;overflow:hidden}
+  .env-fill{height:100%;border-radius:99px}
+  .env-val{font-size:11px;color:var(--text3);min-width:55px;text-align:right;white-space:nowrap}
+  .metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:1.25rem}
+  @media(max-width:600px){.metrics{grid-template-columns:repeat(2,1fr)}}
+  .metric{background:var(--bg);border-radius:var(--radius);padding:12px;border:.5px solid var(--border)}
+  .mlbl{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+  .mval{font-size:18px;font-weight:600}
+  .tab-bar{display:flex;border-bottom:1px solid var(--border);margin-bottom:1rem}
+  .tab{font-size:13px;padding:7px 16px 9px;border:none;background:transparent;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s}
+  .tab:hover{color:var(--text)}
+  .tab.active{color:var(--green);border-bottom-color:var(--green);font-weight:500}
+  .card{background:var(--bg);border:.5px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:1rem}
+  .card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .ctitle{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.07em}
+  .table-wrap{overflow-x:auto}
+  table{width:100%;font-size:13px;border-collapse:collapse;min-width:500px}
+  th{text-align:left;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;padding:8px 0;border-bottom:1px solid var(--border);white-space:nowrap}
+  td{padding:8px 0;border-bottom:.5px solid var(--border);color:var(--text);vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:var(--bg2)}
+  .bdg{display:inline-block;font-size:11px;padding:2px 7px;border-radius:99px;font-weight:500}
+  .bi{background:var(--green-light);color:var(--green-text)}
+  .be{background:var(--red-light);color:var(--red-text)}
+  .bt{background:var(--blue-light);color:var(--blue-text)}
+  .ci{color:var(--green);font-weight:600}
+  .ce{color:var(--red);font-weight:600}
+  .ct{color:var(--blue);font-weight:600}
+  .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+  .bar-lbl{font-size:12px;color:var(--text2);min-width:90px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bar-track{flex:1;height:8px;background:var(--bg2);border-radius:99px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:99px;transition:width .5s}
+  .bar-val{font-size:12px;color:var(--text2);min-width:70px;text-align:right}
+  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:center;justify-content:center;padding:1rem}
+  .overlay.open{display:flex}
+  .modal{background:var(--bg);border-radius:var(--radius-lg);border:.5px solid var(--border2);padding:1.5rem;width:360px;max-width:100%;max-height:90vh;overflow-y:auto}
+  .modal-wide{width:400px}
+  .modal-title{font-size:15px;font-weight:600;margin-bottom:1rem;color:var(--text)}
+  .modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+  .form-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+  .form-row input,.form-row select{font-size:13px;padding:8px 10px;border:.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);flex:1;min-width:80px;outline:none}
+  .form-row input:focus,.form-row select:focus{border-color:var(--green)}
+  .flbl{font-size:12px;color:var(--text2);display:block;margin-bottom:3px}
+  .toggle{position:relative;display:inline-block;width:34px;height:18px;flex-shrink:0}
+  .toggle input{opacity:0;width:0;height:0}
+  .tsl{position:absolute;inset:0;background:var(--border2);border-radius:99px;cursor:pointer;transition:.2s}
+  .tsl:before{content:'';position:absolute;width:14px;height:14px;left:2px;top:2px;background:#fff;border-radius:50%;transition:.2s}
+  input:checked+.tsl{background:var(--green)}
+  input:checked+.tsl:before{transform:translateX(16px)}
+  .cpick{display:flex;gap:6px;flex-wrap:wrap}
+  .cpick div{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .1s}
+  .cpick div:hover{transform:scale(1.15)}
+  .cpick div.picked{border-color:var(--text)}
+  .alert-bar{font-size:13px;padding:10px 14px;border-radius:var(--radius);margin-bottom:12px;display:none}
+  .alert-ok{background:var(--green-light);color:var(--green-text)}
+  .alert-err{background:var(--red-light);color:var(--red-text)}
+  .alert-warn{background:var(--amber-light);color:var(--amber-text)}
+  .empty{text-align:center;padding:2.5rem;color:var(--text3);font-size:13px}
+  input[type=file]{display:none}
+  .hint{font-size:12px;color:var(--text3);margin-bottom:10px;line-height:1.5}
+  .sep{height:.5px;background:var(--border);margin:10px 0}
+  .tx-del{font-size:13px;background:none;border:none;color:var(--text3);cursor:pointer;padding:2px 5px;border-radius:4px}
+  .tx-del:hover{background:var(--red-light);color:var(--red-text)}
+  .skeleton{background:var(--bg2);border-radius:4px;animation:pulse 1.2s infinite}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="brand">
+      Dompet<span>ku</span>
+      <span class="sync-dot loading" id="sync-dot" title="Menghubungkan..."></span>
+    </div>
+    <div class="acts">
+      <button class="btn btn-sm" onclick="openM('mtr')">⇄ Transfer</button>
+      <button class="btn btn-sm" onclick="openAddTx()">+ Transaksi</button>
+      <button class="btn btn-sm btn-g" onclick="document.getElementById('fi').click()">↑ Import Excel/CSV</button>
+    </div>
+  </div>
+  <input type="file" id="fi" accept=".xlsx,.xls,.csv" onchange="handleFile(event)">
+  <div id="alertbox" class="alert-bar"></div>
+
+  <div class="wallet-strip" id="wstrip"><div style="padding:2rem;color:var(--text3);font-size:13px">Memuat dompet...</div></div>
+
+  <div class="metrics">
+    <div class="metric"><div class="mlbl">Total saldo</div><div class="mval" id="m-bal" style="color:var(--blue)">—</div></div>
+    <div class="metric"><div class="mlbl">Pemasukan</div><div class="mval" id="m-in" style="color:var(--green)">—</div></div>
+    <div class="metric"><div class="mlbl">Pengeluaran</div><div class="mval" id="m-out" style="color:var(--red)">—</div></div>
+    <div class="metric"><div class="mlbl">Tersembunyi</div><div class="mval" id="m-hid" style="color:var(--gray)">—</div></div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab active" onclick="swTab('tx',this)">Transaksi</button>
+    <button class="tab" onclick="swTab('cat',this)">Kategori</button>
+  </div>
+
+  <div id="tab-tx">
+    <div class="card">
+      <div class="card-hdr">
+        <div class="ctitle">Riwayat transaksi</div>
+        <select id="f-type" onchange="renderTx()" style="font-size:12px;padding:5px 8px;border:.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text)">
+          <option value="">Semua tipe</option>
+          <option value="income">Pemasukan</option>
+          <option value="expense">Pengeluaran</option>
+          <option value="transfer">Transfer</option>
+        </select>
+      </div>
+      <div id="tx-body"><div class="empty">Memuat transaksi...</div></div>
+    </div>
+  </div>
+  <div id="tab-cat" style="display:none">
+    <div class="card">
+      <div class="card-hdr"><div class="ctitle">Pengeluaran per kategori</div></div>
+      <div id="cat-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Tambah Dompet -->
+<div class="overlay" id="maw">
+  <div class="modal">
+    <div class="modal-title" id="maw-title">Tambah dompet</div>
+    <input type="hidden" id="w-pid">
+    <div class="form-row"><input type="text" id="w-name" placeholder="Nama dompet"></div>
+    <div class="form-row">
+      <select id="w-type">
+        <option value="cash">Tunai</option><option value="bank">Bank</option>
+        <option value="ewallet">E-wallet</option><option value="savings">Tabungan</option>
+        <option value="investment">Investasi</option>
+      </select>
+      <input type="number" id="w-bal" placeholder="Saldo awal" min="0">
+    </div>
+    <div class="form-row" style="align-items:center">
+      <label class="flbl" style="margin:0 6px 0 0">Warna:</label>
+      <div class="cpick" id="cpick"></div>
+    </div>
+    <div class="sep"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <label class="toggle"><input type="checkbox" id="w-hid"><span class="tsl"></span></label>
+      <span style="font-size:13px;color:var(--text2)">Sembunyikan dari total saldo</span>
+    </div>
+    <div class="hint">Dompet tersembunyi tetap bisa transfer tapi tidak dihitung di total</div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeM('maw')">Batal</button>
+      <button class="btn btn-g" onclick="saveWallet()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Tambah Amplop -->
+<div class="overlay" id="menv">
+  <div class="modal">
+    <div class="modal-title">Tambah amplop tujuan</div>
+    <input type="hidden" id="env-wid">
+    <div class="form-row"><input type="text" id="env-name" placeholder="Nama (contoh: Dana Darurat)"></div>
+    <div class="form-row">
+      <input type="number" id="env-alloc" placeholder="Dana dialokasikan" min="0">
+      <input type="number" id="env-target" placeholder="Target (opsional)" min="0">
+    </div>
+    <div class="hint">Amplop = pembagi virtual, tidak mengurangi saldo nyata</div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeM('menv')">Batal</button>
+      <button class="btn btn-g" onclick="saveEnv()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Tambah Transaksi -->
+<div class="overlay" id="mtx">
+  <div class="modal">
+    <div class="modal-title">Tambah transaksi</div>
+    <div class="form-row">
+      <input type="date" id="tx-date">
+      <select id="tx-type"><option value="income">Pemasukan</option><option value="expense">Pengeluaran</option></select>
+    </div>
+    <div class="form-row"><select id="tx-wid" style="flex:1"></select></div>
+    <div class="form-row">
+      <input type="text" id="tx-desc" placeholder="Deskripsi" style="flex:2">
+      <input type="number" id="tx-amt" placeholder="Jumlah" min="0" style="min-width:100px">
+    </div>
+    <div class="form-row"><input type="text" id="tx-cat" placeholder="Kategori"></div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeM('mtx')">Batal</button>
+      <button class="btn btn-g" onclick="saveTx()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Transfer -->
+<div class="overlay" id="mtr">
+  <div class="modal">
+    <div class="modal-title">Transfer antar dompet</div>
+    <div class="form-row"><input type="date" id="tr-date"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <select id="tr-from" style="flex:1;font-size:13px;padding:8px 10px;border:.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text)"></select>
+      <span style="color:var(--text2);font-size:16px">→</span>
+      <select id="tr-to" style="flex:1;font-size:13px;padding:8px 10px;border:.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text)"></select>
+    </div>
+    <div class="form-row"><input type="number" id="tr-amt" placeholder="Jumlah transfer" min="0"></div>
+    <div class="form-row"><input type="text" id="tr-note" placeholder="Catatan (opsional)"></div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeM('mtr')">Batal</button>
+      <button class="btn btn-b" onclick="doTransfer()">Transfer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Column Mapping -->
+<div class="overlay" id="mcol">
+  <div class="modal modal-wide">
+    <div class="modal-title">Petakan kolom Excel/CSV</div>
+    <div style="margin-bottom:6px"><label class="flbl">Import ke dompet:</label></div>
+    <div class="form-row" style="margin-bottom:14px"><select id="imp-wid" style="flex:1"></select></div>
+    <div id="colmap" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px"></div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeM('mcol')">Batal</button>
+      <button class="btn btn-g" onclick="applyMap()">Import</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+// ─── CONFIG ───────────────────────────────────────────────
+const SUPA_URL = 'https://odctfktiqereynrvqyuc.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9kY3Rma3RpcWVyZXlucnZxeXVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNjA3OTIsImV4cCI6MjA5MTYzNjc5Mn0.sUH6t3NqMJFM6nh_w_pFKu-mwcei_r4xvG6rCBkXHPU';
+// ──────────────────────────────────────────────────────────
+
+const PAL = ['#1D9E75','#378ADD','#D85A30','#BA7517','#993556','#534AB7','#639922','#D4537E','#888780'];
+const WTYPES = {cash:'Tunai',bank:'Bank',ewallet:'E-wallet',savings:'Tabungan',investment:'Investasi'};
+const uid = () => Math.random().toString(36).slice(2,10);
+const fmt = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+const fmtK = n => n >= 1e6 ? (n/1e6).toFixed(1)+'jt' : Math.round(n/1e3)+'rb';
+
+let wallets = [];
+let transactions = [];
+let selWallet = 'all';
+let selSub = null;
+let selColor = PAL[0];
+let rawSheet = [], sheetHeaders = [];
+
+// ─── SUPABASE HELPERS ─────────────────────────────────────
+const supa = async (method, path, body) => {
+  const res = await fetch(SUPA_URL + '/rest/v1/' + path, {
+    method,
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': 'Bearer ' + SUPA_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': method === 'POST' ? 'return=representation' : 'return=minimal'
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+};
+
+const supaGet = path => supa('GET', path);
+const supaPost = (path, body) => supa('POST', path, body);
+const supaPatch = (path, body) => supa('PATCH', path, body);
+const supaDelete = path => supa('DELETE', path);
+
+function setSyncDot(state) {
+  const d = document.getElementById('sync-dot');
+  d.className = 'sync-dot ' + state;
+  d.title = state === 'ok' ? 'Tersinkron' : state === 'err' ? 'Gagal sinkron' : state === 'loading' ? 'Menyinkron...' : '';
+}
+
+// ─── LOAD DATA ────────────────────────────────────────────
+async function loadAll() {
+  setSyncDot('loading');
+  try {
+    const [ws, txs] = await Promise.all([
+      supaGet('wallets?order=created_at.asc'),
+      supaGet('transactions?order=date.desc,created_at.desc')
+    ]);
+    wallets = (ws||[]).map(w => ({
+      id: w.id, name: w.name, type: w.type, color: w.color,
+      balance: w.balance, hidden: w.hidden, parentId: w.parent_id,
+      envelopes: w.envelopes || []
+    }));
+    transactions = (txs||[]).map(t => ({
+      id: t.id, date: t.date, desc: t.description, type: t.type,
+      amount: t.amount, cat: t.cat, walletId: t.wallet_id, toWalletId: t.to_wallet_id
+    }));
+    setSyncDot('ok');
+    recalc();
+  } catch(e) {
+    setSyncDot('err');
+    alert2('Gagal memuat data: ' + e.message, 'err');
+    recalc();
+  }
+}
+
+// ─── LOCAL HELPERS ────────────────────────────────────────
+const wb = id => wallets.find(w => w.id === id);
+const inits = n => n.split(' ').map(s => s[0]).join('').slice(0,2).toUpperCase();
+
+function recalc() {
+  const vis = wallets.filter(w => !w.hidden);
+  document.getElementById('m-bal').textContent = fmt(vis.reduce((s,w) => s+w.balance, 0));
+  document.getElementById('m-hid').textContent = fmt(wallets.filter(w => w.hidden).reduce((s,w) => s+w.balance, 0));
+  const vtx = transactions.filter(t => !wb(t.walletId)?.hidden);
+  document.getElementById('m-in').textContent = fmt(vtx.filter(t => t.type==='income').reduce((s,t) => s+t.amount, 0));
+  document.getElementById('m-out').textContent = fmt(vtx.filter(t => t.type==='expense').reduce((s,t) => s+t.amount, 0));
+  renderStrip();
+  renderTx();
+  renderCat();
+}
+
+// ─── WALLET STRIP ─────────────────────────────────────────
+function renderStrip() {
+  const roots = wallets.filter(w => !w.parentId);
+  const children = id => wallets.filter(w => w.parentId === id);
+  const el = document.getElementById('wstrip');
+  const allSel = selWallet === 'all';
+  const totalVis = wallets.filter(w => !w.hidden).reduce((s,w) => s+w.balance, 0);
+
+  let html = `<div class="wcard ${allSel?'sel':''}" style="--wc:#888780;${allSel?'border-color:#888780':''}min-width:120px" onclick="selW('all')">
+    <div class="wdot" style="background:var(--gray-light);color:var(--gray-text)">All</div>
+    <div class="wname">Semua</div>
+    <div class="wbal" style="color:var(--gray)">${fmt(totalVis)}</div>
+    <div class="wtype">${wallets.length} dompet</div>
+  </div>`;
+
+  roots.forEach(w => {
+    const isSel = selWallet === w.id;
+    const subs = children(w.id);
+    html += `<div style="display:flex;flex-direction:column;flex-shrink:0;gap:0">
+      <div class="wcard ${isSel?'sel':''}" style="--wc:${w.color};${isSel?'border-color:'+w.color:''}" onclick="selW('${w.id}')">
+        <button class="wdel" onclick="event.stopPropagation();delW('${w.id}')">✕</button>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <div class="wdot" style="background:${w.color}22;color:${w.color}">${inits(w.name)}</div>
+          <div style="flex:1;min-width:0">
+            <div class="wname">${w.name}${w.hidden?'<span class="whid">tersembunyi</span>':''}</div>
+            <div class="wtype">${WTYPES[w.type]||w.type}</div>
+          </div>
+        </div>
+        <div class="wbal" style="color:${w.color}">${fmt(w.balance)}</div>
+        ${(w.envelopes||[]).length?`<div style="font-size:11px;color:var(--text3);margin-top:2px">${w.envelopes.length} amplop</div>`:''}
+        <div class="wbtns" onclick="event.stopPropagation()">
+          <button class="btn btn-xs" onclick="openAddSub('${w.id}')">+ Sub</button>
+          <button class="btn btn-xs" onclick="openEnv('${w.id}')">+ Amplop</button>
+        </div>
+      </div>
+      ${isSel && subs.length ? renderSubCards(subs,w) : ''}
+      ${isSel && (w.envelopes||[]).length ? renderEnvSection(w) : ''}
+    </div>`;
+  });
+
+  html += `<div class="wadd" onclick="openAddW(null)">
+    <div style="font-size:22px;line-height:1">+</div>
+    <div style="font-size:12px">Dompet baru</div>
+  </div>`;
+  el.innerHTML = html;
+}
+
+function renderSubCards(subs, parent) {
+  return `<div class="sub-wrap" style="border-left-color:${parent.color}55">
+    ${subs.map(s=>`<div class="wcard wcard-sub ${selSub===s.id?'sel':''}" style="--wc:${s.color};${selSub===s.id?'border-color:'+s.color:''}" onclick="selSubW('${s.id}')">
+      <button class="wdel" onclick="event.stopPropagation();delW('${s.id}')">✕</button>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        <div class="wdot" style="width:22px;height:22px;font-size:9px;background:${s.color}22;color:${s.color}">${inits(s.name)}</div>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--text)">${s.name}${s.hidden?'<span class="whid">•</span>':''}</div>
+          <div style="font-size:10px;color:var(--text3)">${WTYPES[s.type]||s.type}</div>
+        </div>
+      </div>
+      <div style="font-size:14px;font-weight:600;color:${s.color}">${fmt(s.balance)}</div>
+    </div>`).join('')}
+  </div>`;
+}
+
+function renderEnvSection(w) {
+  return `<div class="env-section">
+    ${(w.envelopes||[]).map(e=>{
+      const pct = e.target ? Math.min(100,Math.round(e.allocated/e.target*100)) : null;
+      return `<div class="env-row">
+        <div class="env-name" title="${e.name}">${e.name}</div>
+        <div class="env-track"><div class="env-fill" style="width:${pct||0}%;background:${w.color}"></div></div>
+        <div class="env-val">${fmtK(e.allocated)}${e.target?'/'+fmtK(e.target):''}</div>
+        <button onclick="delEnv('${w.id}','${e.id}')" style="font-size:12px;background:none;border:none;color:var(--text3);cursor:pointer;padding:2px 4px;border-radius:4px">✕</button>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function selW(id) { selWallet=id; selSub=null; renderStrip(); renderTx(); renderCat(); }
+function selSubW(id) { selSub=selSub===id?null:id; renderStrip(); renderTx(); }
+
+// ─── TRANSACTIONS ─────────────────────────────────────────
+function renderTx() {
+  const wf = selSub || selWallet;
+  const tf = document.getElementById('f-type')?.value || '';
+  let rows = transactions.filter(t=>(wf==='all'||t.walletId===wf)&&(!tf||t.type===tf));
+  if (!rows.length) { document.getElementById('tx-body').innerHTML='<div class="empty">Belum ada transaksi</div>'; return; }
+  let html = '<div class="table-wrap"><table><thead><tr><th style="width:88px">Tanggal</th><th>Deskripsi</th><th style="width:110px">Dompet</th><th style="width:75px">Tipe</th><th style="width:120px;text-align:right">Jumlah</th><th style="width:32px"></th></tr></thead><tbody>';
+  rows.forEach(t=>{
+    const w=wb(t.walletId), wt2=t.toWalletId?wb(t.toWalletId):null;
+    const sign=t.type==='income'?'+':t.type==='transfer'?'⇄':'−';
+    const cls=t.type==='income'?'ci':t.type==='transfer'?'ct':'ce';
+    const bc=t.type==='income'?'bi':t.type==='transfer'?'bt':'be';
+    const lbl=t.type==='income'?'Masuk':t.type==='transfer'?'Transfer':'Keluar';
+    const wlbl=wt2?`${w?.name||'?'}→${wt2.name}`:(w?.name||'?');
+    html+=`<tr><td style="font-size:11px;color:var(--text2);white-space:nowrap">${t.date}</td><td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px" title="${t.desc||''}">${t.desc||''}</td><td style="font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${wlbl}</td><td><span class="bdg ${bc}">${lbl}</span></td><td style="text-align:right" class="${cls}">${sign}${fmt(t.amount).replace('Rp ','')}</td><td style="text-align:right"><button class="tx-del" onclick="delTx('${t.id}')">✕</button></td></tr>`;
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('tx-body').innerHTML = html;
+}
+
+async function delTx(id) {
+  const t = transactions.find(x=>x.id===id); if (!t) return;
+  setSyncDot('loading');
+  try {
+    await supaDelete(`transactions?id=eq.${id}`);
+    // reverse balance
+    if (t.type==='income') { const w=wb(t.walletId); if(w){w.balance-=t.amount;await supaPatch(`wallets?id=eq.${w.id}`,{balance:w.balance});} }
+    else if (t.type==='expense') { const w=wb(t.walletId); if(w){w.balance+=t.amount;await supaPatch(`wallets?id=eq.${w.id}`,{balance:w.balance});} }
+    else { const wf=wb(t.walletId),wt2=wb(t.toWalletId); if(wf){wf.balance+=t.amount;await supaPatch(`wallets?id=eq.${wf.id}`,{balance:wf.balance});} if(wt2){wt2.balance-=t.amount;await supaPatch(`wallets?id=eq.${wt2.id}`,{balance:wt2.balance});} }
+    transactions = transactions.filter(x=>x.id!==id);
+    setSyncDot('ok'); recalc();
+  } catch(e) { setSyncDot('err'); alert2('Gagal hapus: '+e.message,'err'); }
+}
+
+function renderCat() {
+  const wf = selSub||selWallet;
+  const cats = {};
+  transactions.filter(t=>t.type==='expense'&&(wf==='all'||t.walletId===wf))
+    .forEach(t=>{cats[t.cat||'Lainnya']=(cats[t.cat||'Lainnya']||0)+t.amount;});
+  const sorted = Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+  const max = sorted[0]?.[1]||1;
+  const colors=['#1D9E75','#D85A30','#378ADD','#BA7517','#993556','#3B6D11','#534AB7','#D4537E'];
+  document.getElementById('cat-body').innerHTML = sorted.length
+    ? sorted.map(([c,v],i)=>`<div class="bar-row"><div class="bar-lbl">${c}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/max*100)}%;background:${colors[i%colors.length]}"></div></div><div class="bar-val">${fmt(v)}</div></div>`).join('')
+    : '<div class="empty">Belum ada pengeluaran</div>';
+}
+
+// ─── WALLET CRUD ──────────────────────────────────────────
+function openAddW(pid) {
+  document.getElementById('w-name').value='';
+  document.getElementById('w-bal').value='';
+  document.getElementById('w-hid').checked=false;
+  document.getElementById('w-type').value='cash';
+  document.getElementById('w-pid').value=pid||'';
+  document.getElementById('maw-title').textContent=pid?'Tambah sub-dompet':'Tambah dompet';
+  buildCP(); openM('maw');
+}
+function openAddSub(pid){openAddW(pid);}
+
+function buildCP(){
+  selColor=PAL[0];
+  document.getElementById('cpick').innerHTML=PAL.map((c,i)=>`<div onclick="pickC(this,'${c}')" style="background:${c}" class="${i===0?'picked':''}"></div>`).join('');
+}
+function pickC(el,c){document.querySelectorAll('#cpick div').forEach(d=>d.classList.remove('picked'));el.classList.add('picked');selColor=c;}
+
+async function saveWallet() {
+  const name=document.getElementById('w-name').value.trim();
+  if(!name){alert2('Masukkan nama dompet','err');return;}
+  const bal=parseFloat(document.getElementById('w-bal').value)||0;
+  const type=document.getElementById('w-type').value;
+  const hidden=document.getElementById('w-hid').checked;
+  const pid=document.getElementById('w-pid').value||null;
+  const id='w'+uid();
+  setSyncDot('loading');
+  try {
+    await supaPost('wallets',{id,name,type,color:selColor,balance:bal,hidden,parent_id:pid,envelopes:[]});
+    wallets.push({id,name,type,color:selColor,balance:bal,hidden,parentId:pid,envelopes:[]});
+    closeM('maw'); setSyncDot('ok'); recalc();
+    alert2('Dompet ditambahkan','ok');
+  } catch(e){setSyncDot('err');alert2('Gagal simpan: '+e.message,'err');}
+}
+
+async function delW(id) {
+  if(wallets.filter(w=>!w.parentId).length<=1&&!wb(id)?.parentId){alert2('Minimal 1 dompet utama','err');return;}
+  setSyncDot('loading');
+  try {
+    const childIds=wallets.filter(w=>w.parentId===id).map(w=>w.id);
+    for(const cid of childIds) await supaDelete(`wallets?id=eq.${cid}`);
+    await supaDelete(`wallets?id=eq.${id}`);
+    wallets=wallets.filter(w=>w.id!==id&&w.parentId!==id);
+    transactions=transactions.filter(t=>t.walletId!==id&&t.toWalletId!==id);
+    if(selWallet===id)selWallet='all';
+    setSyncDot('ok'); recalc();
+  } catch(e){setSyncDot('err');alert2('Gagal hapus: '+e.message,'err');}
+}
+
+// ─── ENVELOPES ────────────────────────────────────────────
+function openEnv(wid){
+  document.getElementById('env-wid').value=wid;
+  document.getElementById('env-name').value='';
+  document.getElementById('env-alloc').value='';
+  document.getElementById('env-target').value='';
+  openM('menv');
+}
+async function saveEnv(){
+  const wid=document.getElementById('env-wid').value;
+  const name=document.getElementById('env-name').value.trim();
+  if(!name){alert2('Masukkan nama amplop','err');return;}
+  const alloc=parseFloat(document.getElementById('env-alloc').value)||0;
+  const target=parseFloat(document.getElementById('env-target').value)||0;
+  const w=wb(wid); if(!w) return;
+  if(!w.envelopes)w.envelopes=[];
+  w.envelopes.push({id:'e'+uid(),name,allocated:alloc,target:target||null});
+  setSyncDot('loading');
+  try {
+    await supaPatch(`wallets?id=eq.${wid}`,{envelopes:w.envelopes});
+    closeM('menv'); setSyncDot('ok'); recalc();
+    alert2('Amplop ditambahkan','ok');
+  } catch(e){setSyncDot('err');alert2('Gagal simpan amplop: '+e.message,'err');}
+}
+async function delEnv(wid,eid){
+  const w=wb(wid); if(!w) return;
+  w.envelopes=w.envelopes.filter(e=>e.id!==eid);
+  setSyncDot('loading');
+  try {
+    await supaPatch(`wallets?id=eq.${wid}`,{envelopes:w.envelopes});
+    setSyncDot('ok'); recalc();
+  } catch(e){setSyncDot('err');alert2('Gagal hapus amplop','err');}
+}
+
+// ─── TRANSACTIONS CRUD ────────────────────────────────────
+function fillWSelects(){
+  ['tx-wid','tr-from','tr-to','imp-wid'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    el.innerHTML='<option value="">— Pilih dompet —</option>'+wallets.map(w=>`<option value="${w.id}">${w.parentId?'  ↳ ':''}${w.name}${w.hidden?' [tersembunyi]':''}</option>`).join('');
+  });
+}
+
+function openAddTx(){
+  document.getElementById('tx-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('tx-desc').value='';
+  document.getElementById('tx-amt').value='';
+  document.getElementById('tx-cat').value='';
+  fillWSelects();
+  if(selWallet!=='all')document.getElementById('tx-wid').value=selWallet;
+  openM('mtx');
+}
+
+async function saveTx(){
+  const date=document.getElementById('tx-date').value;
+  const type=document.getElementById('tx-type').value;
+  const wid=document.getElementById('tx-wid').value;
+  const desc=document.getElementById('tx-desc').value.trim();
+  const amt=parseFloat(document.getElementById('tx-amt').value);
+  const cat=document.getElementById('tx-cat').value.trim();
+  if(!date||!wid||!desc||!amt){alert2('Lengkapi semua field','err');return;}
+  const w=wb(wid); if(!w) return;
+  const newBal=type==='income'?w.balance+amt:w.balance-amt;
+  const id='t'+uid();
+  setSyncDot('loading');
+  try {
+    await supaPost('transactions',{id,date,description:desc,type,amount:amt,cat:cat||'Lainnya',wallet_id:wid,to_wallet_id:null});
+    await supaPatch(`wallets?id=eq.${wid}`,{balance:newBal});
+    w.balance=newBal;
+    transactions.unshift({id,date,desc,type,amount:amt,cat:cat||'Lainnya',walletId:wid,toWalletId:null});
+    closeM('mtx'); setSyncDot('ok'); recalc();
+    alert2('Transaksi ditambahkan','ok');
+  } catch(e){setSyncDot('err');alert2('Gagal simpan: '+e.message,'err');}
+}
+
+function openM(id){
+  if(id==='mtr'){fillWSelects();document.getElementById('tr-date').value=new Date().toISOString().slice(0,10);document.getElementById('tr-amt').value='';document.getElementById('tr-note').value='';}
+  document.getElementById(id).classList.add('open');
+}
+function closeM(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+
+async function doTransfer(){
+  const date=document.getElementById('tr-date').value;
+  const fid=document.getElementById('tr-from').value;
+  const tid=document.getElementById('tr-to').value;
+  const amt=parseFloat(document.getElementById('tr-amt').value);
+  const note=document.getElementById('tr-note').value.trim();
+  if(!fid||!tid||!amt){alert2('Lengkapi semua field','err');return;}
+  if(fid===tid){alert2('Dompet asal dan tujuan sama','err');return;}
+  const wf=wb(fid),wt2=wb(tid);
+  if(!wf||!wt2) return;
+  if(wf.balance<amt){alert2('Saldo tidak cukup','err');return;}
+  const id='t'+uid();
+  setSyncDot('loading');
+  try {
+    await supaPost('transactions',{id,date,description:note||`Transfer ke ${wt2.name}`,type:'transfer',amount:amt,cat:'Transfer',wallet_id:fid,to_wallet_id:tid});
+    const newFbal=wf.balance-amt, newTbal=wt2.balance+amt;
+    await Promise.all([
+      supaPatch(`wallets?id=eq.${fid}`,{balance:newFbal}),
+      supaPatch(`wallets?id=eq.${tid}`,{balance:newTbal})
+    ]);
+    wf.balance=newFbal; wt2.balance=newTbal;
+    transactions.unshift({id,date,desc:note||`Transfer ke ${wt2.name}`,type:'transfer',amount:amt,cat:'Transfer',walletId:fid,toWalletId:tid});
+    closeM('mtr'); setSyncDot('ok'); recalc();
+    alert2(`Transfer ${fmt(amt)} berhasil${wt2.hidden?' (dompet tersembunyi)':''}`, 'ok');
+  } catch(e){setSyncDot('err');alert2('Gagal transfer: '+e.message,'err');}
+}
+
+// ─── IMPORT EXCEL/CSV ─────────────────────────────────────
+function handleFile(e){
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      let rows=[];
+      if(file.name.endsWith('.csv')){
+        const lines=ev.target.result.split('\n').map(l=>l.trim()).filter(Boolean);
+        sheetHeaders=lines[0].split(',').map(h=>h.trim().replace(/"/g,''));
+        rows=lines.slice(1).map(l=>{const c=l.split(',');const o={};sheetHeaders.forEach((h,i)=>o[h]=c[i]?.trim().replace(/"/g,'')||'');return o;});
+      } else {
+        const wbx=XLSX.read(ev.target.result,{type:'binary'});
+        const ws=wbx.Sheets[wbx.SheetNames[0]];
+        rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+        sheetHeaders=Object.keys(rows[0]||{});
+      }
+      rawSheet=rows; fillWSelects();
+      const flds=[{k:'date',l:'Tanggal'},{k:'desc',l:'Deskripsi'},{k:'amount',l:'Jumlah'},{k:'type',l:'Tipe'},{k:'cat',l:'Kategori'}];
+      document.getElementById('colmap').innerHTML=flds.map(f=>`<div><label class="flbl">${f.l}</label><select id="map-${f.k}" style="width:100%;font-size:13px;padding:7px 8px;border:.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text)"><option value="">— Abaikan —</option>${sheetHeaders.map(h=>`<option value="${h}" ${ag(h,f.k)?'selected':''}>${h}</option>`).join('')}</select></div>`).join('');
+      openM('mcol');
+    }catch(err){alert2('Gagal baca file: '+err.message,'err');}
+  };
+  if(file.name.endsWith('.csv'))reader.readAsText(file); else reader.readAsBinaryString(file);
+  e.target.value='';
+}
+
+function ag(h,f){
+  h=h.toLowerCase();
+  return{date:['tanggal','date','tgl'],desc:['keterangan','deskripsi','desc','nota','note','nama'],amount:['jumlah','amount','nominal','total','debit','kredit'],type:['tipe','type','jenis'],cat:['kategori','category','cat']}[f]?.some(k=>h.includes(k));
+}
+
+async function applyMap(){
+  const wid=document.getElementById('imp-wid').value;
+  if(!wid){alert2('Pilih dompet tujuan','err');return;}
+  const w=wb(wid);
+  const gc=id=>document.getElementById(id)?.value||'';
+  const dc=gc('map-date'),dsc=gc('map-desc'),ac=gc('map-amount'),tc=gc('map-type'),cc=gc('map-cat');
+  if(!dsc||!ac){alert2('Deskripsi & Jumlah wajib dipilih','err');return;}
+
+  setSyncDot('loading');
+  let added=0,skipped=0,newBal=w.balance;
+  const txRows=[];
+  rawSheet.forEach(row=>{
+    const raw=parseFloat((row[ac]||'').toString().replace(/[^0-9.-]/g,''));
+    if(isNaN(raw)||raw===0){skipped++;return;}
+    let type='expense';
+    if(tc){const rv=(row[tc]||'').toLowerCase();if(rv.includes('in')||rv.includes('masuk')||rv.includes('kredit'))type='income';}
+    else if(raw>0)type='income';
+    const amt=Math.abs(raw);
+    let date=new Date().toISOString().slice(0,10);
+    if(dc&&row[dc]){const p=new Date(row[dc]);if(!isNaN(p))date=p.toISOString().slice(0,10);}
+    newBal=type==='income'?newBal+amt:newBal-amt;
+    const id='t'+uid();
+    txRows.push({local:{id,date,desc:row[dsc]||'Impor',type,amount:amt,cat:cc&&row[cc]?row[cc]:'Impor',walletId:wid,toWalletId:null},
+      remote:{id,date,description:row[dsc]||'Impor',type,amount:amt,cat:cc&&row[cc]?row[cc]:'Impor',wallet_id:wid,to_wallet_id:null}});
+    added++;
+  });
+
+  try {
+    // batch insert in chunks of 50
+    for(let i=0;i<txRows.length;i+=50){
+      await supaPost('transactions',txRows.slice(i,i+50).map(r=>r.remote));
+    }
+    await supaPatch(`wallets?id=eq.${wid}`,{balance:newBal});
+    w.balance=newBal;
+    txRows.forEach(r=>transactions.unshift(r.local));
+    transactions.sort((a,b)=>b.date.localeCompare(a.date));
+    closeM('mcol'); setSyncDot('ok'); recalc();
+    alert2(`Import ${added} transaksi ke ${w.name}${skipped?' ('+skipped+' dilewati)':''}`, 'ok');
+  } catch(e){setSyncDot('err');alert2('Gagal import: '+e.message,'err');}
+}
+
+function swTab(name,el){
+  ['tx','cat'].forEach(t=>document.getElementById('tab-'+t).style.display='none');
+  document.getElementById('tab-'+name).style.display='block';
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function alert2(msg,type){
+  const el=document.getElementById('alertbox');
+  el.className='alert-bar alert-'+(type==='ok'?'ok':type==='warn'?'warn':'err');
+  el.textContent=msg; el.style.display='block';
+  clearTimeout(el._t);
+  el._t=setTimeout(()=>el.style.display='none',3500);
+}
+
+// ─── INIT ─────────────────────────────────────────────────
+loadAll();
+</script>
+</body>
+</html>
