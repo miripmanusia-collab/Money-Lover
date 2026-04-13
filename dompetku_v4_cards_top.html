@@ -1,0 +1,565 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+#app{padding:1.25rem;max-width:980px;margin:0 auto}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:8px}
+.brand{font-size:20px;font-weight:500;color:var(--color-text-primary);letter-spacing:-.5px}
+.brand span{color:#1D9E75}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.btn{font-size:13px;padding:6px 13px;border-radius:var(--border-radius-md);border:.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-primary);cursor:pointer}
+.btn:hover{background:var(--color-background-secondary)}
+.btn-g{background:#1D9E75;color:#fff;border-color:#1D9E75}.btn-g:hover{background:#0F6E56}
+.btn-b{background:#378ADD;color:#fff;border-color:#378ADD}.btn-b:hover{background:#185FA5}
+.btn-sm{font-size:12px;padding:5px 10px}
+.wallet-strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;margin-bottom:1.25rem;align-items:stretch}
+.wallet-strip::-webkit-scrollbar{height:3px}
+.wallet-strip::-webkit-scrollbar-thumb{background:var(--color-border-secondary);border-radius:99px}
+.wcard{min-width:150px;max-width:170px;flex-shrink:0;border-radius:var(--border-radius-lg);border:1.5px solid var(--color-border-tertiary);padding:12px;cursor:pointer;position:relative;transition:border-color .15s,background .15s}
+.wcard:hover{background:var(--color-background-secondary)}
+.wcard.sel{border-color:var(--wc);background:var(--color-background-secondary)}
+.wcard-all{min-width:120px}
+.wdot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;margin-bottom:8px;flex-shrink:0}
+.wname{font-size:13px;font-weight:500;color:var(--color-text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+.wbal{font-size:16px;font-weight:500;margin-bottom:2px}
+.wtype{font-size:11px;color:var(--color-text-tertiary)}
+.whid{font-size:10px;padding:1px 6px;border-radius:99px;background:#F1EFE8;color:#444441;font-weight:500;margin-left:4px;vertical-align:middle}
+.wdel{position:absolute;top:6px;right:6px;font-size:13px;background:none;border:none;color:var(--color-text-tertiary);cursor:pointer;opacity:0;line-height:1;padding:2px}
+.wcard:hover .wdel{opacity:1}
+.wadd{min-width:110px;border-radius:var(--border-radius-lg);border:1.5px dashed var(--color-border-secondary);padding:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:var(--color-text-tertiary);flex-shrink:0}
+.wadd:hover{background:var(--color-background-secondary)}
+.sub-strip{display:flex;gap:6px;padding:8px 12px;border-top:.5px solid var(--color-border-tertiary);overflow-x:auto;flex-wrap:wrap}
+.sub-chip{font-size:12px;padding:4px 10px;border-radius:99px;border:.5px solid var(--color-border-tertiary);cursor:pointer;color:var(--color-text-secondary);white-space:nowrap}
+.sub-chip:hover{background:var(--color-background-secondary)}
+.sub-chip.sel{font-weight:500}
+.env-bar-wrap{padding:6px 12px 10px;border-top:.5px solid var(--color-border-tertiary)}
+.env-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.env-row:last-child{margin-bottom:0}
+.env-name{font-size:11px;color:var(--color-text-secondary);min-width:80px}
+.env-track{flex:1;height:5px;background:var(--color-border-tertiary);border-radius:99px;overflow:hidden}
+.env-fill{height:100%;border-radius:99px}
+.env-val{font-size:11px;color:var(--color-text-tertiary);min-width:55px;text-align:right}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:1.25rem}
+.metric{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px}
+.mlbl{font-size:11px;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.mval{font-size:18px;font-weight:500}
+.tab-bar{display:flex;border-bottom:.5px solid var(--color-border-tertiary);margin-bottom:1rem}
+.tab{font-size:13px;padding:6px 14px 8px;border:none;background:transparent;color:var(--color-text-secondary);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.active{color:#1D9E75;border-bottom-color:#1D9E75}
+.card{background:var(--color-background-primary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:1rem}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.ctitle{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.06em}
+table{width:100%;font-size:13px;border-collapse:collapse}
+th{text-align:left;font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.05em;padding:8px 0;border-bottom:.5px solid var(--color-border-tertiary)}
+td{padding:8px 0;border-bottom:.5px solid var(--color-border-tertiary);color:var(--color-text-primary)}
+tr:last-child td{border-bottom:none}
+.bdg{display:inline-block;font-size:11px;padding:2px 7px;border-radius:99px;font-weight:500}
+.bi{background:#E1F5EE;color:#085041}.be{background:#FAECE7;color:#4A1B0C}.bt{background:#E6F1FB;color:#0C447C}
+.ci{color:#1D9E75;font-weight:500}.ce{color:#D85A30;font-weight:500}.ct{color:#378ADD;font-weight:500}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.bar-lbl{font-size:12px;color:var(--color-text-secondary);min-width:90px;text-align:right}
+.bar-track{flex:1;height:7px;background:var(--color-background-secondary);border-radius:99px;overflow:hidden}
+.bar-fill{height:100%;border-radius:99px}
+.bar-val{font-size:12px;color:var(--color-text-secondary);min-width:70px}
+.form-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.form-row input,.form-row select{font-size:13px;padding:7px 10px;border:.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);flex:1;min-width:80px}
+.alert{font-size:13px;padding:10px 14px;border-radius:var(--border-radius-md);margin-bottom:12px}
+.aok{background:#E1F5EE;color:#085041}.aerr{background:#FAECE7;color:#4A1B0C}
+.empty{text-align:center;padding:2rem;color:var(--color-text-tertiary);font-size:13px}
+input[type=file]{display:none}
+.toggle{position:relative;display:inline-block;width:34px;height:18px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.tslider{position:absolute;inset:0;background:var(--color-border-secondary);border-radius:99px;cursor:pointer;transition:.2s}
+.tslider:before{content:'';position:absolute;width:14px;height:14px;left:2px;top:2px;background:#fff;border-radius:50%;transition:.2s}
+input:checked+.tslider{background:#1D9E75}
+input:checked+.tslider:before{transform:translateX(16px)}
+.modal-wrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:100;align-items:flex-start;justify-content:center;padding-top:50px;min-height:400px}
+.modal-box{background:var(--color-background-primary);border-radius:var(--border-radius-lg);border:.5px solid var(--color-border-secondary);padding:1.5rem;width:350px;max-width:95vw}
+.modal-title{font-size:15px;font-weight:500;margin-bottom:1rem;color:var(--color-text-primary)}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+</style>
+
+<div id="app">
+  <div class="topbar">
+    <div class="brand">Dompet<span>ku</span></div>
+    <div class="acts">
+      <button class="btn btn-sm" onclick="openM('mtr')">Transfer</button>
+      <button class="btn btn-sm" onclick="openAddTx()">+ Transaksi</button>
+      <button class="btn btn-sm btn-g" onclick="document.getElementById('fi').click()">Import Excel/CSV</button>
+    </div>
+  </div>
+  <input type="file" id="fi" accept=".xlsx,.xls,.csv" onchange="handleFile(event)">
+  <div id="alertbox" style="display:none"></div>
+
+  <div class="wallet-strip" id="wstrip"></div>
+
+  <div class="metrics">
+    <div class="metric"><div class="mlbl">Total saldo</div><div class="mval" id="m-bal" style="color:#378ADD">Rp 0</div></div>
+    <div class="metric"><div class="mlbl">Pemasukan</div><div class="mval" id="m-in" style="color:#1D9E75">Rp 0</div></div>
+    <div class="metric"><div class="mlbl">Pengeluaran</div><div class="mval" id="m-out" style="color:#D85A30">Rp 0</div></div>
+    <div class="metric"><div class="mlbl">Tersembunyi</div><div class="mval" id="m-hid" style="color:#888780">Rp 0</div></div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab active" onclick="swTab('tx',this)">Transaksi</button>
+    <button class="tab" onclick="swTab('cat',this)">Kategori</button>
+  </div>
+
+  <div id="tab-tx">
+    <div class="card">
+      <div class="card-hdr">
+        <div class="ctitle">Riwayat transaksi</div>
+        <select id="f-type" onchange="renderTx()" style="font-size:12px;padding:4px 8px;border:.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary)">
+          <option value="">Semua tipe</option><option value="income">Pemasukan</option><option value="expense">Pengeluaran</option><option value="transfer">Transfer</option>
+        </select>
+      </div>
+      <div id="tx-body"></div>
+    </div>
+  </div>
+
+  <div id="tab-cat" style="display:none">
+    <div class="card">
+      <div class="card-hdr"><div class="ctitle">Pengeluaran per kategori</div></div>
+      <div id="cat-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Tambah Dompet -->
+<div class="modal-wrap" id="maw">
+  <div class="modal-box">
+    <div class="modal-title" id="maw-title">Tambah dompet</div>
+    <input type="hidden" id="w-pid">
+    <div class="form-row"><input type="text" id="w-name" placeholder="Nama dompet"></div>
+    <div class="form-row">
+      <select id="w-type"><option value="cash">Tunai</option><option value="bank">Bank</option><option value="ewallet">E-wallet</option><option value="savings">Tabungan</option><option value="investment">Investasi</option></select>
+      <input type="number" id="w-bal" placeholder="Saldo awal">
+    </div>
+    <div class="form-row" style="align-items:center;gap:8px">
+      <div id="cpick" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <label class="toggle"><input type="checkbox" id="w-hid"><span class="tslider"></span></label>
+      <span style="font-size:13px;color:var(--color-text-secondary)">Sembunyikan dari total saldo</span>
+    </div>
+    <div style="font-size:12px;color:var(--color-text-tertiary);margin-bottom:10px">Dompet tersembunyi tetap bisa transfer, tapi tidak masuk total</div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeM('maw')">Batal</button>
+      <button class="btn btn-g" onclick="saveWallet()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Tambah Amplop -->
+<div class="modal-wrap" id="menv">
+  <div class="modal-box">
+    <div class="modal-title">Tambah amplop tujuan</div>
+    <input type="hidden" id="env-wid">
+    <div class="form-row"><input type="text" id="env-name" placeholder="Nama (contoh: Dana Darurat)"></div>
+    <div class="form-row">
+      <input type="number" id="env-alloc" placeholder="Dana dialokasikan">
+      <input type="number" id="env-target" placeholder="Target (opsional)">
+    </div>
+    <div style="font-size:12px;color:var(--color-text-tertiary);margin-bottom:10px">Amplop = pembagi virtual, tidak mengurangi saldo</div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeM('menv')">Batal</button>
+      <button class="btn btn-g" onclick="saveEnv()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Tambah Transaksi -->
+<div class="modal-wrap" id="mtx">
+  <div class="modal-box">
+    <div class="modal-title">Tambah transaksi</div>
+    <div class="form-row"><input type="date" id="tx-date"><select id="tx-type"><option value="income">Pemasukan</option><option value="expense">Pengeluaran</option></select></div>
+    <div class="form-row"><select id="tx-wid" style="flex:1"></select></div>
+    <div class="form-row"><input type="text" id="tx-desc" placeholder="Deskripsi" style="flex:2"><input type="number" id="tx-amt" placeholder="Jumlah" style="min-width:90px"></div>
+    <div class="form-row"><input type="text" id="tx-cat" placeholder="Kategori"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeM('mtx')">Batal</button>
+      <button class="btn btn-g" onclick="saveTx()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Transfer -->
+<div class="modal-wrap" id="mtr">
+  <div class="modal-box">
+    <div class="modal-title">Transfer antar dompet</div>
+    <div class="form-row"><input type="date" id="tr-date"></div>
+    <div class="form-row">
+      <select id="tr-from" style="flex:1"></select>
+      <span style="align-self:center;color:var(--color-text-secondary);padding:0 2px">→</span>
+      <select id="tr-to" style="flex:1"></select>
+    </div>
+    <div class="form-row"><input type="number" id="tr-amt" placeholder="Jumlah"></div>
+    <div class="form-row"><input type="text" id="tr-note" placeholder="Catatan (opsional)"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeM('mtr')">Batal</button>
+      <button class="btn btn-b" onclick="doTransfer()">Transfer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Column Mapping -->
+<div class="modal-wrap" id="mcol">
+  <div class="modal-box" style="width:380px">
+    <div class="modal-title">Petakan kolom Excel/CSV</div>
+    <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px">Import ke dompet:</div>
+    <div class="form-row" style="margin-bottom:12px"><select id="imp-wid" style="flex:1"></select></div>
+    <div id="colmap" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeM('mcol')">Batal</button>
+      <button class="btn btn-g" onclick="applyMap()">Import</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const PAL=['#1D9E75','#378ADD','#D85A30','#BA7517','#993556','#534AB7','#639922','#D4537E','#888780'];
+const WTYPES={cash:'Tunai',bank:'Bank',ewallet:'E-wallet',savings:'Tabungan',investment:'Investasi'};
+const uid=()=>Math.random().toString(36).slice(2,8);
+const fmt=n=>'Rp '+Math.round(n).toLocaleString('id-ID');
+const fmtK=n=>n>=1e6?(n/1e6).toFixed(1)+'jt':Math.round(n/1e3)+'rb';
+
+const STORE_KEY='dompetku_v4';
+function loadData(){
+  try{const d=localStorage.getItem(STORE_KEY);if(d) return JSON.parse(d);}catch(e){}
+  return null;
+}
+function saveData(){
+  try{localStorage.setItem(STORE_KEY,JSON.stringify({wallets,transactions}));}catch(e){}
+}
+
+let saved=loadData();
+let wallets=saved?.wallets||[
+  {id:'w1',name:'BCA',type:'bank',color:'#378ADD',balance:8750000,hidden:false,parentId:null,envelopes:[
+    {id:'e1',name:'Dana Darurat',allocated:3000000,target:10000000},
+    {id:'e2',name:'Liburan',allocated:1500000,target:5000000},
+  ]},
+  {id:'w2',name:'Tunai',type:'cash',color:'#1D9E75',balance:500000,hidden:false,parentId:null,envelopes:[]},
+  {id:'w3',name:'GoPay',type:'ewallet',color:'#BA7517',balance:230000,hidden:false,parentId:null,envelopes:[]},
+  {id:'w4',name:'Tabungan Rahasia',type:'savings',color:'#888780',balance:15000000,hidden:true,parentId:null,envelopes:[]},
+  {id:'w5',name:'Mandiri Tab',type:'bank',color:'#534AB7',balance:3200000,hidden:false,parentId:'w1',envelopes:[]},
+];
+let transactions=saved?.transactions||[
+  {id:'t1',date:'2025-03-01',desc:'Gaji Maret',type:'income',amount:8000000,cat:'Gaji',walletId:'w1'},
+  {id:'t2',date:'2025-03-05',desc:'Belanja',type:'expense',amount:85000,cat:'Belanja',walletId:'w2'},
+  {id:'t3',date:'2025-03-08',desc:'Top up GoPay',type:'transfer',amount:200000,cat:'Transfer',walletId:'w1',toWalletId:'w3'},
+  {id:'t4',date:'2025-03-10',desc:'Makan siang',type:'expense',amount:45000,cat:'Makan',walletId:'w3'},
+  {id:'t5',date:'2025-03-12',desc:'Listrik',type:'expense',amount:320000,cat:'Utilitas',walletId:'w1'},
+  {id:'t6',date:'2025-03-15',desc:'Freelance',type:'income',amount:2500000,cat:'Freelance',walletId:'w1'},
+];
+
+let selWallet='all';
+let selSub=null;
+let selColor=PAL[0];
+let rawSheet=[],sheetHeaders=[];
+
+const wb=id=>wallets.find(w=>w.id===id);
+const inits=n=>n.split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase();
+
+function recalc(){
+  const vis=wallets.filter(w=>!w.hidden);
+  document.getElementById('m-bal').textContent=fmt(vis.reduce((s,w)=>s+w.balance,0));
+  document.getElementById('m-hid').textContent=fmt(wallets.filter(w=>w.hidden).reduce((s,w)=>s+w.balance,0));
+  const vtx=transactions.filter(t=>!wb(t.walletId)?.hidden);
+  document.getElementById('m-in').textContent=fmt(vtx.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0));
+  document.getElementById('m-out').textContent=fmt(vtx.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0));
+  renderStrip();
+  renderTx();
+  renderCat();
+  saveData();
+}
+
+function renderStrip(){
+  const roots=wallets.filter(w=>!w.parentId);
+  const children=id=>wallets.filter(w=>w.parentId===id);
+  const el=document.getElementById('wstrip');
+  const allSel=selWallet==='all';
+  let html=`<div class="wcard wcard-all ${allSel?'sel':''}" style="--wc:#888780;border-color:${allSel?'#888780':'var(--color-border-tertiary)'}" onclick="selW('all')">
+    <div class="wdot" style="background:#F1EFE8;color:#444441">All</div>
+    <div class="wname">Semua</div>
+    <div class="wbal" style="color:#5F5E5A">${fmt(wallets.filter(w=>!w.hidden).reduce((s,w)=>s+w.balance,0))}</div>
+    <div class="wtype">${wallets.length} dompet</div>
+  </div>`;
+  roots.forEach(w=>{
+    const isSel=selWallet===w.id;
+    const subs=children(w.id);
+    html+=`<div style="display:flex;flex-direction:column;flex-shrink:0">
+      <div class="wcard ${isSel?'sel':''}" style="--wc:${w.color};border-color:${isSel?w.color:'var(--color-border-tertiary)'};max-width:200px;min-width:155px" onclick="selW('${w.id}')">
+        <button class="wdel" onclick="event.stopPropagation();delW('${w.id}')">×</button>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <div class="wdot" style="background:${w.color}22;color:${w.color}">${inits(w.name)}</div>
+          <div style="flex:1;min-width:0">
+            <div class="wname">${w.name}${w.hidden?`<span class="whid">tersembunyi</span>`:''}</div>
+            <div class="wtype">${WTYPES[w.type]||w.type}</div>
+          </div>
+        </div>
+        <div class="wbal" style="color:${w.color}">${fmt(w.balance)}</div>
+        ${(w.envelopes||[]).length?`<div style="font-size:11px;color:var(--color-text-tertiary);margin-top:2px">${w.envelopes.length} amplop</div>`:''}
+        <div style="display:flex;gap:4px;margin-top:8px" onclick="event.stopPropagation()">
+          <button class="btn btn-sm" style="flex:1;font-size:11px;padding:3px 6px" onclick="openAddSub('${w.id}')">+ Sub</button>
+          <button class="btn btn-sm" style="flex:1;font-size:11px;padding:3px 6px" onclick="openEnv('${w.id}')">+ Amplop</button>
+        </div>
+      </div>
+      ${subs.length&&isSel?renderSubStrip(subs,w):''}
+      ${(w.envelopes||[]).length&&isSel?renderEnvBars(w):''}
+    </div>`;
+  });
+  html+=`<div class="wadd" onclick="openAddW(null)"><div style="font-size:20px;line-height:1">+</div><div style="font-size:12px">Dompet baru</div></div>`;
+  el.innerHTML=html;
+}
+
+function renderSubStrip(subs,parent){
+  return `<div style="display:flex;flex-direction:column;gap:5px;margin-top:6px;padding-left:10px;border-left:2px solid ${parent.color}44">
+    ${subs.map(s=>`<div class="wcard ${selSub===s.id?'sel':''}" style="--wc:${s.color};border-color:${selSub===s.id?s.color:'var(--color-border-tertiary)'};min-width:140px;max-width:155px;padding:9px 10px" onclick="selSubW('${s.id}')">
+      <button class="wdel" onclick="event.stopPropagation();delW('${s.id}')">×</button>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        <div class="wdot" style="width:22px;height:22px;font-size:9px;background:${s.color}22;color:${s.color}">${inits(s.name)}</div>
+        <div><div style="font-size:12px;font-weight:500;color:var(--color-text-primary)">${s.name}${s.hidden?`<span class="whid">•</span>`:''}</div><div style="font-size:10px;color:var(--color-text-tertiary)">${WTYPES[s.type]||s.type}</div></div>
+      </div>
+      <div style="font-size:14px;font-weight:500;color:${s.color}">${fmt(s.balance)}</div>
+    </div>`).join('')}
+  </div>`;
+}
+
+function renderEnvBars(w){
+  if(!(w.envelopes||[]).length) return '';
+  return `<div class="env-bar-wrap" style="border:.5px solid var(--color-border-tertiary);border-top:none;border-radius:0 0 var(--border-radius-lg) var(--border-radius-lg);background:var(--color-background-secondary);padding:8px 10px">
+    ${w.envelopes.map(e=>{
+      const pct=e.target?Math.min(100,Math.round(e.allocated/e.target*100)):null;
+      return `<div class="env-row">
+        <div class="env-name">${e.name}</div>
+        <div class="env-track"><div class="env-fill" style="width:${pct||0}%;background:${w.color}"></div></div>
+        <div class="env-val">${fmtK(e.allocated)}${e.target?'/'+fmtK(e.target):''}</div>
+        <button onclick="delEnv('${w.id}','${e.id}')" style="font-size:12px;background:none;border:none;color:var(--color-text-tertiary);cursor:pointer;padding:0 2px">×</button>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function selW(id){
+  selWallet=id; selSub=null;
+  renderStrip(); renderTx(); renderCat();
+}
+function selSubW(id){
+  selSub=selSub===id?null:id;
+  renderStrip(); renderTx();
+}
+
+function renderTx(){
+  const wf=selSub||selWallet;
+  const tf=document.getElementById('f-type')?.value||'';
+  let rows=transactions.filter(t=>(wf==='all'||t.walletId===wf)&&(!tf||t.type===tf)).sort((a,b)=>b.date.localeCompare(a.date));
+  if(!rows.length){document.getElementById('tx-body').innerHTML='<div class="empty">Belum ada transaksi</div>';return;}
+  let html='<div style="overflow-x:auto"><table style="table-layout:fixed;min-width:520px"><thead><tr><th style="width:88px">Tanggal</th><th>Deskripsi</th><th style="width:100px">Dompet</th><th style="width:72px">Tipe</th><th style="width:110px;text-align:right">Jumlah</th><th style="width:24px"></th></tr></thead><tbody>';
+  rows.forEach(t=>{
+    const w=wb(t.walletId),wt2=t.toWalletId?wb(t.toWalletId):null;
+    const sign=t.type==='income'?'+':t.type==='transfer'?'⇄':'−';
+    const cls=t.type==='income'?'ci':t.type==='transfer'?'ct':'ce';
+    const bc=t.type==='income'?'bi':t.type==='transfer'?'bt':'be';
+    const lbl=t.type==='income'?'Masuk':t.type==='transfer'?'Transfer':'Keluar';
+    const wlbl=wt2?`${w?.name||'?'}→${wt2.name}`:(w?.name||'?');
+    html+=`<tr><td style="font-size:11px;color:var(--color-text-secondary)">${t.date}</td><td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.desc}</td><td style="font-size:11px;color:var(--color-text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${wlbl}</td><td><span class="bdg ${bc}">${lbl}</span></td><td style="text-align:right" class="${cls}">${sign}${fmt(t.amount).replace('Rp ','')}</td><td style="text-align:right"><button onclick="delTx('${t.id}')" style="font-size:12px;background:none;border:none;color:var(--color-text-tertiary);cursor:pointer">×</button></td></tr>`;
+  });
+  html+='</tbody></table></div>';
+  document.getElementById('tx-body').innerHTML=html;
+}
+
+function delTx(id){
+  const t=transactions.find(x=>x.id===id);
+  if(!t) return;
+  if(t.type==='income'){const w=wb(t.walletId);if(w)w.balance-=t.amount;}
+  else if(t.type==='expense'){const w=wb(t.walletId);if(w)w.balance+=t.amount;}
+  else{const wf=wb(t.walletId),wt2=wb(t.toWalletId);if(wf)wf.balance+=t.amount;if(wt2)wt2.balance-=t.amount;}
+  transactions=transactions.filter(x=>x.id!==id);
+  recalc();
+}
+
+function renderCat(){
+  const wf=selSub||selWallet;
+  const cats={};
+  transactions.filter(t=>t.type==='expense'&&(wf==='all'||t.walletId===wf)).forEach(t=>{cats[t.cat||'Lainnya']=(cats[t.cat||'Lainnya']||0)+t.amount;});
+  const sorted=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+  const max=sorted[0]?.[1]||1;
+  const colors=['#1D9E75','#D85A30','#378ADD','#BA7517','#993556','#3B6D11','#534AB7','#D4537E'];
+  document.getElementById('cat-body').innerHTML=sorted.length?sorted.map(([c,v],i)=>`<div class="bar-row"><div class="bar-lbl">${c}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/max*100)}%;background:${colors[i%colors.length]}"></div></div><div class="bar-val">${fmt(v)}</div></div>`).join(''):'<div class="empty">Belum ada data pengeluaran</div>';
+}
+
+function openAddW(pid){
+  document.getElementById('w-name').value='';
+  document.getElementById('w-bal').value='';
+  document.getElementById('w-hid').checked=false;
+  document.getElementById('w-type').value='cash';
+  document.getElementById('w-pid').value=pid||'';
+  document.getElementById('maw-title').textContent=pid?'Tambah sub-dompet':'Tambah dompet';
+  buildCP();
+  openM('maw');
+}
+function openAddSub(pid){openAddW(pid);}
+
+function buildCP(){
+  selColor=PAL[0];
+  document.getElementById('cpick').innerHTML=PAL.map((c,i)=>`<div onclick="pickC(this,'${c}')" style="width:20px;height:20px;border-radius:50%;background:${c};cursor:pointer;border:2px solid ${i===0?'#000':'transparent'}"></div>`).join('');
+}
+function pickC(el,c){document.querySelectorAll('#cpick div').forEach(d=>d.style.borderColor='transparent');el.style.borderColor='#000';selColor=c;}
+
+function saveWallet(){
+  const name=document.getElementById('w-name').value.trim();
+  if(!name){alert2('Masukkan nama dompet','err');return;}
+  const bal=parseFloat(document.getElementById('w-bal').value)||0;
+  const type=document.getElementById('w-type').value;
+  const hidden=document.getElementById('w-hid').checked;
+  const pid=document.getElementById('w-pid').value||null;
+  wallets.push({id:'w'+uid(),name,type,color:selColor,balance:bal,hidden,parentId:pid,envelopes:[]});
+  closeM('maw'); recalc();
+  alert2('Dompet ditambahkan','ok');
+}
+
+function delW(id){
+  if(wallets.filter(w=>!w.parentId).length<=1&&!wb(id)?.parentId){alert2('Minimal 1 dompet utama','err');return;}
+  wallets=wallets.filter(w=>w.id!==id&&w.parentId!==id);
+  transactions=transactions.filter(t=>t.walletId!==id&&t.toWalletId!==id);
+  if(selWallet===id) selWallet='all';
+  recalc();
+}
+
+function openEnv(wid){document.getElementById('env-wid').value=wid;document.getElementById('env-name').value='';document.getElementById('env-alloc').value='';document.getElementById('env-target').value='';openM('menv');}
+function saveEnv(){
+  const wid=document.getElementById('env-wid').value;
+  const name=document.getElementById('env-name').value.trim();
+  if(!name){alert2('Masukkan nama amplop','err');return;}
+  const alloc=parseFloat(document.getElementById('env-alloc').value)||0;
+  const target=parseFloat(document.getElementById('env-target').value)||0;
+  const w=wb(wid);if(!w) return;
+  if(!w.envelopes) w.envelopes=[];
+  w.envelopes.push({id:'e'+uid(),name,allocated:alloc,target:target||null});
+  closeM('menv'); recalc();
+  alert2('Amplop ditambahkan','ok');
+}
+function delEnv(wid,eid){const w=wb(wid);if(w) w.envelopes=w.envelopes.filter(e=>e.id!==eid);recalc();}
+
+function fillWSelects(){
+  ['tx-wid','tr-from','tr-to','imp-wid'].forEach(id=>{
+    const el=document.getElementById(id);if(!el) return;
+    el.innerHTML='<option value="">— Pilih dompet —</option>'+wallets.map(w=>`<option value="${w.id}">${w.parentId?'  ↳ ':''}${w.name}${w.hidden?' [tersembunyi]':''}</option>`).join('');
+  });
+}
+
+function openAddTx(){
+  document.getElementById('tx-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('tx-desc').value='';document.getElementById('tx-amt').value='';document.getElementById('tx-cat').value='';
+  fillWSelects();
+  if(selWallet!=='all') document.getElementById('tx-wid').value=selWallet;
+  openM('mtx');
+}
+function saveTx(){
+  const date=document.getElementById('tx-date').value;
+  const type=document.getElementById('tx-type').value;
+  const wid=document.getElementById('tx-wid').value;
+  const desc=document.getElementById('tx-desc').value.trim();
+  const amt=parseFloat(document.getElementById('tx-amt').value);
+  const cat=document.getElementById('tx-cat').value.trim();
+  if(!date||!wid||!desc||!amt){alert2('Lengkapi semua field','err');return;}
+  const w=wb(wid);if(!w) return;
+  if(type==='income') w.balance+=amt; else w.balance-=amt;
+  transactions.push({id:'t'+uid(),date,desc,type,amount:amt,cat:cat||'Lainnya',walletId:wid});
+  closeM('mtx'); recalc();
+  alert2('Transaksi ditambahkan','ok');
+}
+
+function openM(id){
+  const today=new Date().toISOString().slice(0,10);
+  if(id==='mtr'){fillWSelects();document.getElementById('tr-date').value=today;document.getElementById('tr-amt').value='';document.getElementById('tr-note').value='';}
+  document.getElementById(id).style.display='flex';
+}
+function closeM(id){document.getElementById(id).style.display='none';}
+
+function doTransfer(){
+  const date=document.getElementById('tr-date').value;
+  const fid=document.getElementById('tr-from').value;
+  const tid=document.getElementById('tr-to').value;
+  const amt=parseFloat(document.getElementById('tr-amt').value);
+  const note=document.getElementById('tr-note').value.trim();
+  if(!fid||!tid||!amt){alert2('Lengkapi semua field','err');return;}
+  if(fid===tid){alert2('Dompet asal dan tujuan sama','err');return;}
+  const wf=wb(fid),wt2=wb(tid);
+  if(wf.balance<amt){alert2('Saldo tidak cukup','err');return;}
+  wf.balance-=amt; wt2.balance+=amt;
+  transactions.push({id:'t'+uid(),date,desc:note||`Transfer ke ${wt2.name}`,type:'transfer',amount:amt,cat:'Transfer',walletId:fid,toWalletId:tid});
+  closeM('mtr'); recalc();
+  alert2(`Transfer ${fmt(amt)} berhasil${wt2.hidden?' (dompet tersembunyi)':''}`, 'ok');
+}
+
+function handleFile(e){
+  const file=e.target.files[0];if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      let rows=[];
+      if(file.name.endsWith('.csv')){
+        const lines=ev.target.result.split('\n').map(l=>l.trim()).filter(Boolean);
+        sheetHeaders=lines[0].split(',').map(h=>h.trim().replace(/"/g,''));
+        rows=lines.slice(1).map(l=>{const c=l.split(',');const o={};sheetHeaders.forEach((h,i)=>o[h]=c[i]?.trim().replace(/"/g,'')||'');return o;});
+      } else {
+        const wbx=XLSX.read(ev.target.result,{type:'binary'});
+        const ws=wbx.Sheets[wbx.SheetNames[0]];
+        rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+        sheetHeaders=Object.keys(rows[0]||{});
+      }
+      rawSheet=rows;
+      fillWSelects();
+      const flds=[{k:'date',l:'Tanggal'},{k:'desc',l:'Deskripsi'},{k:'amount',l:'Jumlah'},{k:'type',l:'Tipe'},{k:'cat',l:'Kategori'}];
+      document.getElementById('colmap').innerHTML=flds.map(f=>`<div><div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:3px">${f.l}</div><select id="map-${f.k}" style="width:100%;font-size:13px;padding:6px 8px;border:.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary)"><option value="">— Abaikan —</option>${sheetHeaders.map(h=>`<option value="${h}" ${ag(h,f.k)?'selected':''}>${h}</option>`).join('')}</select></div>`).join('');
+      openM('mcol');
+    }catch(err){alert2('Gagal baca file: '+err.message,'err');}
+  };
+  if(file.name.endsWith('.csv')) reader.readAsText(file); else reader.readAsBinaryString(file);
+  e.target.value='';
+}
+
+function ag(h,f){h=h.toLowerCase();return{date:['tanggal','date','tgl'],desc:['keterangan','deskripsi','desc','nota','note'],amount:['jumlah','amount','nominal','total'],type:['tipe','type','jenis'],cat:['kategori','category','cat']}[f]?.some(k=>h.includes(k));}
+
+function applyMap(){
+  const wid=document.getElementById('imp-wid').value;
+  if(!wid){alert2('Pilih dompet tujuan','err');return;}
+  const w=wb(wid);
+  const gc=id=>document.getElementById(id)?.value||'';
+  const dc=gc('map-date'),dsc=gc('map-desc'),ac=gc('map-amount'),tc=gc('map-type'),cc=gc('map-cat');
+  if(!dsc||!ac){alert2('Deskripsi & Jumlah wajib dipilih','err');return;}
+  let added=0,skipped=0;
+  rawSheet.forEach(row=>{
+    const raw=parseFloat((row[ac]||'').toString().replace(/[^0-9.-]/g,''));
+    if(isNaN(raw)||raw===0){skipped++;return;}
+    let type='expense';
+    if(tc){const rv=(row[tc]||'').toLowerCase();if(rv.includes('in')||rv.includes('masuk')||rv.includes('kredit')) type='income';}
+    else if(raw>0) type='income';
+    const amt=Math.abs(raw);
+    let date=new Date().toISOString().slice(0,10);
+    if(dc&&row[dc]){const p=new Date(row[dc]);if(!isNaN(p)) date=p.toISOString().slice(0,10);}
+    if(type==='income') w.balance+=amt; else w.balance-=amt;
+    transactions.push({id:'t'+uid(),date,desc:row[dsc]||'Impor',type,amount:amt,cat:cc&&row[cc]?row[cc]:'Impor',walletId:wid});
+    added++;
+  });
+  closeM('mcol'); recalc();
+  alert2(`Import ${added} transaksi ke ${w.name}${skipped?' ('+skipped+' dilewati)':''}`, 'ok');
+}
+
+function swTab(name,el){
+  ['tx','cat'].forEach(t=>document.getElementById('tab-'+t).style.display='none');
+  document.getElementById('tab-'+name).style.display='block';
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function alert2(msg,type){
+  const el=document.getElementById('alertbox');
+  el.className='alert '+(type==='ok'?'aok':'aerr');
+  el.textContent=msg; el.style.display='block';
+  setTimeout(()=>el.style.display='none',3000);
+}
+
+recalc();
+</script>
