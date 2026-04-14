@@ -82,6 +82,15 @@ button{font-family:inherit;cursor:pointer}
 .wcard:hover .wdel{opacity:1}
 .wadd{min-width:80px;border-radius:var(--rl);border:1.5px dashed var(--bd2);padding:.75rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--text3);flex-shrink:0;background:transparent}
 .wadd:hover{background:var(--bg2)}
+.inspect-card{padding-top:1rem}
+.inspect-head{align-items:flex-start;gap:.75rem;flex-wrap:wrap}
+.inspect-sub{font-size:12px;color:var(--text2);margin-top:4px}
+.inspect-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.inspect-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem;margin-bottom:.75rem}
+.inspect-stat{background:var(--bg2);border-radius:var(--r);padding:.75rem}
+.inspect-stat-lbl{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.inspect-stat-val{font-size:17px;font-weight:700}
+@media(min-width:992px){.inspect-stats{grid-template-columns:repeat(6,minmax(0,1fr));}}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{text-align:left;font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;padding:6px 0;border-bottom:.5px solid var(--bd)}
 td{padding:7px 0;border-bottom:.5px solid var(--bd);vertical-align:middle}
@@ -184,10 +193,24 @@ input[type=file]{display:none}
         <div class="metric"><div class="metric-lbl">Pemasukan</div><div class="metric-val" id="m-in" style="color:var(--green)">—</div></div>
         <div class="metric"><div class="metric-lbl">Pengeluaran</div><div class="metric-val" id="m-out" style="color:var(--red)">—</div></div>
       </div>
-      <div id="wallet-inspect"></div>
       <div id="budget-alerts"></div>
-      <div class="card">
-        <div class="card-hdr"><div class="card-title" id="recent-title">Transaksi Terakhir</div><button class="btn btn-sm" onclick="gotoPage('tx')">Semua</button></div>
+      <div class="card inspect-card" id="inspect-card" style="display:none">
+        <div class="card-hdr inspect-head">
+          <div>
+            <div class="card-title" id="inspect-title">Inspect Dompet</div>
+            <div class="inspect-sub">Semua transaksi yang terkait dompet ini langsung kelihatan di bawah.</div>
+          </div>
+          <div class="inspect-actions">
+            <button class="btn btn-sm" onclick="gotoPage('tx')">Semua Transaksi</button>
+            <button class="btn btn-sm" onclick="openEditSelectedWallet()">Edit Dompet</button>
+            <button class="btn btn-sm" onclick="selW('all')">Reset</button>
+          </div>
+        </div>
+        <div class="inspect-stats" id="inspect-stats"></div>
+        <div id="inspect-tx"></div>
+      </div>
+      <div class="card" id="recent-card">
+        <div class="card-hdr"><div class="card-title">Transaksi Terakhir</div><button class="btn btn-sm" onclick="gotoPage('tx')">Semua</button></div>
         <div id="recent-tx"></div>
       </div>
       <div class="card" id="bill-upcoming-card">
@@ -197,10 +220,10 @@ input[type=file]{display:none}
     </div>
     <div id="page-tx" class="page">
       <div class="ptabs">
-        <button class="ptab active" onclick="setPeriod('all',this)">Semua</button>
-        <button class="ptab" onclick="setPeriod('week',this)">Minggu</button>
+        <button class="ptab active" onclick="setPeriod('week',this)">Minggu</button>
         <button class="ptab" onclick="setPeriod('month',this)">Bulan</button>
         <button class="ptab" onclick="setPeriod('year',this)">Tahun</button>
+        <button class="ptab" onclick="setPeriod('all',this)">Semua</button>
       </div>
       <div style="display:flex;gap:.5rem;margin-bottom:.75rem">
         <select id="f-wallet" onchange="renderTxPage()" style="font-size:12px;padding:6px 8px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--bg);color:var(--text);flex:1"></select>
@@ -264,7 +287,7 @@ input[type=file]{display:none}
     <button class="ptab active" id="tt-expense" onclick="setTxType('expense')">Pengeluaran</button>
     <button class="ptab" id="tt-transfer" onclick="setTxType('transfer')">Transfer</button>
   </div>
-  <div class="form-row"><input type="text" id="tx-amt" placeholder="0" style="font-size:26px;font-weight:700;border:none;background:transparent;text-align:center;flex:1;padding:.25rem 0" inputmode="numeric"></div>
+  <div class="form-row"><input type="number" id="tx-amt" placeholder="0" style="font-size:26px;font-weight:700;border:none;background:transparent;text-align:center;flex:1;padding:.25rem 0" inputmode="decimal"></div>
   <div class="form-row"><input type="date" id="tx-date"><select id="tx-wid"></select></div>
   <div id="tx-towid-row" class="form-row" style="display:none"><select id="tx-towid" style="flex:1"></select></div>
   <div class="form-row"><input type="text" id="tx-desc" placeholder="Keterangan (opsional)"></div>
@@ -282,8 +305,7 @@ input[type=file]{display:none}
   <div class="form-row">
     <select id="w-type"><option value="cash">Tunai</option><option value="bank">Bank</option><option value="ewallet">E-wallet</option><option value="savings">Tabungan</option><option value="investment">Investasi</option></select>
   </div>
-  <div id="w-bal-row" class="form-row"><input type="text" id="w-bal" placeholder="Saldo dompet" inputmode="numeric"></div>
-  <div class="hint" id="w-bal-hint">Saat edit dompet, perubahan saldo otomatis dicatat sebagai transaksi penyesuaian.</div>
+  <div id="w-bal-row" class="form-row"><input type="number" id="w-bal" placeholder="Saldo awal (hanya untuk dompet baru)" min="0"></div>
   <div class="form-row" style="align-items:center"><span class="flbl" style="margin:0 6px 0 0">Warna:</span><div class="cpick" id="cpick"></div></div>
   <div class="sep"></div>
   <div class="toggle-row"><label class="toggle"><input type="checkbox" id="w-hid"><span class="tsl"></span></label><span style="font-size:13px;color:var(--text2)">Sembunyikan dari total saldo</span></div>
@@ -294,39 +316,36 @@ input[type=file]{display:none}
 <!-- Modal: Anggaran -->
 <div class="overlay" id="mbudget"><div class="modal">
   <div class="modal-handle"></div>
-  <div class="modal-title" id="mbudget-title">Tambah Anggaran</div>
-  <input type="hidden" id="bgt-id">
+  <div class="modal-title">Tambah Anggaran</div>
   <div class="form-row"><select id="bgt-cat" style="flex:1"></select></div>
-  <div class="form-row"><input type="text" id="bgt-limit" placeholder="Batas anggaran (Rp)" inputmode="numeric"></div>
+  <div class="form-row"><input type="number" id="bgt-limit" placeholder="Batas anggaran (Rp)" min="0"></div>
   <div class="form-row"><select id="bgt-period"><option value="monthly">Bulanan</option><option value="weekly">Mingguan</option></select></div>
-  <div class="modal-foot"><button class="btn" onclick="closeM('mbudget')">Batal</button><button class="btn btn-g" id="mbudget-save-btn" onclick="saveBudget()">Simpan</button></div>
+  <div class="modal-foot"><button class="btn" onclick="closeM('mbudget')">Batal</button><button class="btn btn-g" onclick="saveBudget()">Simpan</button></div>
 </div></div>
 
 <!-- Modal: Tagihan -->
 <div class="overlay" id="mbill"><div class="modal">
   <div class="modal-handle"></div>
-  <div class="modal-title" id="mbill-title">Tambah Tagihan Berulang</div>
-  <input type="hidden" id="bill-id">
+  <div class="modal-title">Tambah Tagihan Berulang</div>
   <div class="form-row"><input type="text" id="bill-name" placeholder="Nama tagihan (misal: Listrik)"></div>
-  <div class="form-row"><input type="text" id="bill-amt" placeholder="Jumlah (Rp)" inputmode="numeric"></div>
+  <div class="form-row"><input type="number" id="bill-amt" placeholder="Jumlah (Rp)" min="0"></div>
   <div class="form-row"><select id="bill-wid"></select><select id="bill-freq"><option value="monthly">Bulanan</option><option value="weekly">Mingguan</option><option value="yearly">Tahunan</option></select></div>
   <div class="form-row"><input type="number" id="bill-day" placeholder="Tanggal jatuh tempo (1-31)" min="1" max="31"><input type="text" id="bill-cat" placeholder="Kategori"></div>
   <div class="toggle-row"><label class="toggle"><input type="checkbox" id="bill-auto" checked><span class="tsl"></span></label><span style="font-size:13px;color:var(--text2)">Catat otomatis saat jatuh tempo</span></div>
-  <div class="modal-foot"><button class="btn" onclick="closeM('mbill')">Batal</button><button class="btn btn-g" id="mbill-save-btn" onclick="saveBill()">Simpan</button></div>
+  <div class="modal-foot"><button class="btn" onclick="closeM('mbill')">Batal</button><button class="btn btn-g" onclick="saveBill()">Simpan</button></div>
 </div></div>
 
 <!-- Modal: Hutang/Piutang -->
 <div class="overlay" id="mdebt"><div class="modal">
   <div class="modal-handle"></div>
   <div class="modal-title" id="mdebt-title">Tambah</div>
-  <input type="hidden" id="debt-id">
   <input type="hidden" id="debt-mode">
   <div class="form-row"><input type="text" id="debt-person" placeholder="Nama orang"></div>
-  <div class="form-row"><input type="text" id="debt-amt" placeholder="Jumlah (Rp)" inputmode="numeric"></div>
+  <div class="form-row"><input type="number" id="debt-amt" placeholder="Jumlah (Rp)" min="0"></div>
   <div class="form-row"><input type="date" id="debt-date"><input type="date" id="debt-due"></div>
   <div style="font-size:11px;color:var(--text3);margin-bottom:.5rem">Tanggal mulai · Jatuh tempo</div>
   <div class="form-row"><input type="text" id="debt-note" placeholder="Catatan (opsional)"></div>
-  <div class="modal-foot"><button class="btn" onclick="closeM('mdebt')">Batal</button><button class="btn btn-g" id="mdebt-save-btn" onclick="saveDebt()">Simpan</button></div>
+  <div class="modal-foot"><button class="btn" onclick="closeM('mdebt')">Batal</button><button class="btn btn-g" onclick="saveDebt()">Simpan</button></div>
 </div></div>
 
 <!-- Modal: Edit Transaksi -->
@@ -344,7 +363,7 @@ input[type=file]{display:none}
     <button class="ptab" id="ett-transfer" onclick="setEditTxType('transfer')">Transfer</button>
   </div>
   <div class="form-row">
-    <input type="text" id="etx-amt" placeholder="Jumlah" inputmode="numeric" style="font-size:20px;font-weight:700;text-align:center;flex:1">
+    <input type="number" id="etx-amt" placeholder="Jumlah" inputmode="decimal" style="font-size:20px;font-weight:700;text-align:center;flex:1">
   </div>
   <div class="form-row">
     <input type="date" id="etx-date" style="flex:1">
@@ -398,11 +417,11 @@ const CATS=[
   {id:'other',l:'Lainnya',i:'📦'},
 ];
 const uid=()=>Math.random().toString(36).slice(2,10);
-const fmtNum=n=>{const num=Number(n)||0;return (num<0?'-':'')+Math.round(Math.abs(num)).toLocaleString('id-ID');};
+const fmtNum=n=>Math.round(Math.abs(Number(n)||0)).toLocaleString('id-ID');
 const fmt=n=>'Rp '+fmtNum(n);
-const fmtK=n=>Math.round(Math.abs(Number(n)||0)).toLocaleString('id-ID');
-const parseNum=v=>{const s=String(v??'').replace(/[^\d-]/g,'');return s&&s!=='-'?Number(s):0;};
-const moneyTone=n=>(Number(n)||0)<0?'var(--red)':(Number(n)||0)>0?'var(--green)':'var(--text3)';
+const fmtK=n=>fmtNum(n);
+const fmtSigned=(n,{rp=false,plus=false}={})=>{const v=Number(n)||0,a=fmtNum(v),p=rp?'Rp ':'';return v<0?'-'+p+a:(plus&&v>0?'+'+p+a:p+a)};
+const moneyTone=(n,pos='var(--green)')=>{const v=Number(n)||0;return v<0?'var(--red)':v>0?pos:'var(--text2)'};
 const todayStr=()=>new Date().toISOString().slice(0,10);
 const thisMonth=()=>new Date().toISOString().slice(0,7);
 const inits=n=>n.trim().split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase();
@@ -435,16 +454,6 @@ function setSS(s,msg){
   if(d)d.className='sdot '+s;
   if(l)l.textContent=msg||{ok:'Tersinkron',err:'Gagal sinkron',sync:'Menyinkron...'}[s]||'';
 }
-
-function bindMoneyInput(id){
-  const el=document.getElementById(id);if(!el||el.dataset.moneyBound)return;
-  el.dataset.moneyBound='1';
-  el.addEventListener('input',()=>{
-    const digits=String(el.value).replace(/\D/g,'');
-    el.value=digits?Number(digits).toLocaleString('id-ID'):'';
-  });
-}
-function bindMoneyInputs(){['w-bal','tx-amt','bgt-limit','bill-amt','debt-amt','etx-amt'].forEach(bindMoneyInput);}
 
 async function loadAll(){
   setSS('sync');
@@ -483,7 +492,12 @@ function gotoPage(name){
   if(name==='bill') renderBills();
   if(name==='debt') renderDebts();
   if(name==='wallet') renderWalletFull();
-  if(name==='tx') renderTxPage();
+  if(name==='tx'){
+    updateTxPeriodButtons();
+    const fw=document.getElementById('f-wallet');
+    if(fw) fw.value=selWallet==='all'?'all':selWallet;
+    renderTxPage();
+  }
 }
 
 document.querySelectorAll('[data-page]').forEach(el=>{
@@ -494,34 +508,41 @@ document.querySelectorAll('[data-page]').forEach(el=>{
 // RENDER ALL
 // ════════════════════════════════════════
 function renderAll(){
-  renderStrip();renderMetrics();renderHome();renderTxPage();
-  renderBudgetPage();renderBills();renderDebts();renderWalletFull();
-  fillWSelects();fillCatSel();
-  bindMoneyInputs();
-}
-
-function txsForWallet(id){
-  return transactions.filter(t=>t.walletId===id||t.toWalletId===id);
+  renderStrip();
+  renderMetrics();
+  renderHome();
+  renderBudgetPage();
+  renderBills();
+  renderDebts();
+  renderWalletFull();
+  fillWSelects();
+  const fw=document.getElementById('f-wallet');
+  if(fw) fw.value=selWallet==='all'?'all':selWallet;
+  fillCatSel();
+  updateTxPeriodButtons();
+  renderTxPage();
 }
 
 function renderMetrics(){
-  const mo=thisMonth();
-  const isAll=selWallet==='all';
-  const currentWallet=!isAll?wById(selWallet):null;
   const vis=wallets.filter(w=>!w.hidden);
-  const balance=isAll?vis.reduce((s,w)=>s+w.balance,0):(currentWallet?.balance||0);
-  let moTx=isAll
-    ? transactions.filter(t=>t.date&&t.date.startsWith(mo)&&!wallets.find(w=>w.id===t.walletId)?.hidden)
-    : txsForWallet(selWallet).filter(t=>t.date&&t.date.startsWith(mo));
-  const inc=moTx.filter(t=>t.type==='income'&&(isAll||t.walletId===selWallet)).reduce((s,t)=>s+t.amount,0);
-  const exp=moTx.filter(t=>t.type==='expense'&&(isAll||t.walletId===selWallet)).reduce((s,t)=>s+t.amount,0);
-  document.getElementById('m-bal').textContent=fmt(balance);
-  document.getElementById('m-bal').style.color=moneyTone(balance);
-  document.getElementById('m-in').textContent=fmt(inc);
-  document.getElementById('m-out').textContent=fmt(exp);
+  const scopedIds=selWallet==='all'?vis.map(w=>w.id):[selWallet];
+  const bal=selWallet==='all'
+    ? vis.reduce((s,w)=>s+(Number(w.balance)||0),0)
+    : (Number(wById(selWallet)?.balance)||0);
+  const balEl=document.getElementById('m-bal');
+  balEl.textContent=fmtSigned(bal,{rp:true});
+  balEl.style.color=moneyTone(bal,'var(--blue)');
+
+  const mo=thisMonth();
+  const moTx=transactions.filter(t=>t.date&&t.date.startsWith(mo));
+  const scopedMoTx=moTx.filter(t=>scopedIds.includes(t.walletId)||scopedIds.includes(t.toWalletId));
+  const inc=scopedMoTx.filter(t=>t.type==='income'&&scopedIds.includes(t.walletId)).reduce((s,t)=>s+t.amount,0);
+  const exp=scopedMoTx.filter(t=>t.type==='expense'&&scopedIds.includes(t.walletId)).reduce((s,t)=>s+t.amount,0);
+  document.getElementById('m-in').textContent=fmtSigned(inc,{rp:true});
+  document.getElementById('m-out').textContent=fmtSigned(exp,{rp:true});
   const net=inc-exp,nel=document.getElementById('m-net');
-  nel.textContent=(net>=0?'+':'-')+fmt(Math.abs(net));
-  nel.style.color=net>=0?'var(--green)':'var(--red)';
+  nel.textContent=fmtSigned(net,{rp:true,plus:true});
+  nel.style.color=moneyTone(net,'var(--green)');
 }
 
 // ════════════════════════════════════════
@@ -531,86 +552,44 @@ const wById=id=>wallets.find(w=>w.id===id);
 
 function renderStrip(){
   const el=document.getElementById('wstrip');
-  const roots=wallets.filter(w=>!w.parentId);
-  const allSel=selWallet==='all';
-  const total=wallets.filter(w=>!w.hidden).reduce((s,w)=>s+w.balance,0);
-  let html=`<div class="wcard ${allSel?'sel':''}" style="--wc:var(--gray);${allSel?'border-color:var(--gray)':''};min-width:90px" onclick="selW('all')">
-    <div class="wdot" style="background:var(--grl);color:var(--grt)">All</div>
-    <div class="wname">Semua</div>
-    <div class="wbal" style="color:var(--gray)">${fmtK(total)}</div>
-  </div>`;
-  roots.forEach(w=>{
-    const isSel=selWallet===w.id;
-    html+=`<div class="wcard ${isSel?'sel':''}" style="--wc:${w.color};${isSel?'border-color:'+w.color:''}" onclick="selW('${w.id}')">
-      <button class="wdel" title="Edit dompet" onclick="event.stopPropagation();openEditWallet('${w.id}')">✎</button>
+  const vis=wallets.filter(w=>!w.hidden);
+  const total=vis.reduce((s,w)=>s+(Number(w.balance)||0),0);
+  el.innerHTML=`<div class="wcard ${selWallet==='all'?'sel':''}" style="--wc:var(--gray)" onclick="selW('all')">
+      <div class="wdot" style="background:var(--grl);color:var(--grt)">All</div>
+      <div class="wname">Semua</div>
+      <div class="wbal" style="color:${moneyTone(total,'var(--text)')}">${fmtSigned(total)}</div>
+    </div>`+
+    vis.map(w=>`<div class="wcard ${selWallet===w.id?'sel':''}" style="--wc:${w.color}" onclick="selW('${w.id}')">
       <div class="wdot" style="background:${w.color}22;color:${w.color}">${inits(w.name)}</div>
-      <div class="wname">${w.name}${w.hidden?'<span class="whid">sembunyi</span>':''}</div>
-      <div class="wbal" style="color:${moneyTone(w.balance)}">${fmtNum(w.balance)}</div>
-      <div class="wtype-lbl">${WTYPES[w.type]||w.type}</div>
-    </div>`;
-  });
-  html+=`<div class="wadd" onclick="openM('mwallet')"><div style="font-size:20px">+</div><div style="font-size:11px">Baru</div></div>`;
-  el.innerHTML=html;
+      <div class="wname">${w.name}${w.hidden?'<span class="whid">hidden</span>':''}</div>
+      <div class="wbal" style="color:${moneyTone(w.balance,w.color)}">${fmtSigned(w.balance)}</div>
+      <div class="wtype-lbl">${w.type==='cash'?'Tunai':'Bank'}</div>
+      <button class="wdel" onclick="event.stopPropagation();delWallet('${w.id}')">✕</button>
+    </div>`).join('')+
+    `<div class="wadd" onclick="openWalletModal()"><div style="font-size:24px">＋</div><div style="font-size:11px">Tambah</div></div>`;
 }
 
-function selW(id){selWallet=id;renderStrip();renderMetrics();renderHome();const fw=document.getElementById('f-wallet');if(fw)fw.value=id;renderTxPage();}
+function selW(id){selWallet=id;renderAll();}
 
 // ════════════════════════════════════════
 // HOME
 // ════════════════════════════════════════
 function renderHome(){
   renderMetrics();
-  const inspectEl=document.getElementById('wallet-inspect');
-  const walletSelected=selWallet!=='all'?wById(selWallet):null;
-  const walletRows=walletSelected?txsForWallet(selWallet).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')||String(b.id).localeCompare(String(a.id))):[];
-  if(walletSelected){
-    const win=walletRows.filter(t=>t.type==='income'&&t.walletId===selWallet).reduce((s,t)=>s+t.amount,0);
-    const wout=walletRows.filter(t=>t.type==='expense'&&t.walletId===selWallet).reduce((s,t)=>s+t.amount,0);
-    const tin=walletRows.filter(t=>t.type==='transfer'&&t.toWalletId===selWallet).reduce((s,t)=>s+t.amount,0);
-    const tout=walletRows.filter(t=>t.type==='transfer'&&t.walletId===selWallet).reduce((s,t)=>s+t.amount,0);
-    inspectEl.innerHTML=`<div class="card" style="margin-bottom:.75rem">
-      <div class="card-hdr" style="align-items:flex-start;gap:.75rem;flex-wrap:wrap">
-        <div>
-          <div class="card-title">Inspect Dompet · ${walletSelected.name}</div>
-          <div style="font-size:12px;color:var(--text2);margin-top:4px">Semua transaksi yang terkait dompet ini langsung kelihatan di bawah.</div>
-        </div>
-        <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-left:auto">
-          <button class="btn btn-sm" onclick="gotoPage('tx')">Semua Transaksi</button>
-          <button class="btn btn-sm" onclick="openEditWallet('${walletSelected.id}')">Edit Dompet</button>
-          <button class="btn btn-sm" onclick="selW('all')">Reset</button>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.5rem;margin-bottom:.75rem">
-        <div class="metric"><div class="metric-lbl">Saldo Sekarang</div><div class="metric-val" style="color:${moneyTone(walletSelected.balance)}">${fmt(walletSelected.balance)}</div></div>
-        <div class="metric"><div class="metric-lbl">Jumlah Transaksi</div><div class="metric-val">${walletRows.length}</div></div>
-        <div class="metric"><div class="metric-lbl">Pemasukan</div><div class="metric-val" style="color:var(--green)">${fmt(win)}</div></div>
-        <div class="metric"><div class="metric-lbl">Pengeluaran</div><div class="metric-val" style="color:var(--red)">${fmt(wout)}</div></div>
-        <div class="metric"><div class="metric-lbl">Transfer Masuk</div><div class="metric-val" style="color:var(--blue)">${fmt(tin)}</div></div>
-        <div class="metric"><div class="metric-lbl">Transfer Keluar</div><div class="metric-val" style="color:var(--orange)">${fmt(tout)}</div></div>
-      </div>
-      <div style="max-height:320px;overflow:auto;border:.5px solid var(--bd2);border-radius:var(--r)">${walletRows.length?txItemsHTML(walletRows):'<div class="empty" style="padding:1rem">Belum ada transaksi di dompet ini</div>'}</div>
-    </div>`;
-  } else {
-    inspectEl.innerHTML='';
-  }
   // Recent tx
   const rtEl=document.getElementById('recent-tx');
-  const recentCard=document.getElementById('recent-card');
-  const recent=(walletSelected?walletRows:transactions.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')||String(b.id).localeCompare(String(a.id)))).slice(0,6);
+  const recent=transactions.slice(0,6);
   rtEl.innerHTML=recent.length?txItemsHTML(recent):'<div class="empty">Belum ada transaksi</div>';
-  const recentTitle=document.getElementById('recent-title');
-  if(recentTitle)recentTitle.textContent='Transaksi Terakhir';
-  if(recentCard)recentCard.style.display=walletSelected?'none':'block';
   // Budget alerts
   const mo=thisMonth(),alerts=[];
   budgets.forEach(b=>{
     const spent=transactions.filter(t=>t.type==='expense'&&t.cat===b.cat&&t.date&&t.date.startsWith(mo)).reduce((s,t)=>s+t.amount,0);
     const pct=spent/b.limit*100;
-    if(pct>=80){const c=catBy(b.cat);alerts.push(`<div class="alert-bar ${pct>=100?'aerr':'awarn'}" style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.5rem"><span>${pct>=100?'🚨':'⚠️'} Anggaran <b>${c.i} ${c.l}</b>: ${pct>=100?'Melebihi batas!':'Hampir habis'} (${fmt(spent)} / ${fmt(b.limit)})</span><button class="btn btn-xs" onclick="openEditBudget('${b.id}')">Edit</button></div>`);}
+    if(pct>=80){const c=catBy(b.cat);alerts.push(`<div class="alert-bar ${pct>=100?'aerr':'awarn'}" style="display:block;margin-bottom:.5rem">${pct>=100?'🚨':'⚠️'} Anggaran <b>${c.i} ${c.l}</b>: ${pct>=100?'Melebihi batas!':'Hampir habis'} (${fmt(spent)} / ${fmt(b.limit)})</div>`);}
   });
   document.getElementById('budget-alerts').innerHTML=alerts.join('');
   // Upcoming bills
-  const now=new Date(),upcoming=bills.filter(b=>{const due=new Date(now.getFullYear(),now.getMonth(),b.day);const matchWallet=!walletSelected||b.walletId===walletSelected.id;return matchWallet&&(due-now)/864e5<7;}).slice(0,3);
+  const now=new Date(),upcoming=bills.filter(b=>{const due=new Date(now.getFullYear(),now.getMonth(),b.day);return(due-now)/864e5<7;}).slice(0,3);
   const ubCard=document.getElementById('bill-upcoming-card');
   if(!upcoming.length){ubCard.style.display='none';return;}
   ubCard.style.display='';
@@ -618,10 +597,10 @@ function renderHome(){
     const due=new Date(now.getFullYear(),now.getMonth(),b.day);
     const diff=Math.round((due-now)/864e5);
     const cls=diff<0?'due-over':diff<=3?'due-soon':'';
-    return `<div class="bill-item" onclick="openEditBill('${b.id}')" style="cursor:pointer">
+    return `<div class="bill-item">
       <div class="cat-avt" style="background:var(--al)">${catBy(b.cat).i}</div>
       <div style="flex:1"><div style="font-size:13px;font-weight:600">${b.name}</div><div class="${cls}" style="font-size:11px">${diff<0?'Lewat '+Math.abs(diff)+' hari':diff===0?'Hari ini':diff+' hari lagi'}</div></div>
-      <div style="display:flex;align-items:center;gap:6px"><div style="font-size:13px;font-weight:700">${fmt(b.amount)}</div><button class="btn btn-xs" onclick="event.stopPropagation();openEditBill('${b.id}')">Edit</button></div>
+      <div style="font-size:13px;font-weight:700">${fmt(b.amount)}</div>
     </div>`;
   }).join('');
 }
@@ -643,7 +622,7 @@ function txItemsHTML(rows){
         <div style="font-size:11px;color:var(--text2)">${t.date} · ${wt2?w?.name+'→'+wt2.name:(w?.name||'?')} · ${c.i} ${c.l}</div>
       </div>
       <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;margin-left:.5rem">
-        <span class="${cls}" style="font-size:13px;font-weight:700">${sign}${fmtK(t.amount)}</span>
+        <span class="${cls}" style="font-size:13px;font-weight:700">${sign}${fmtNum(t.amount)}</span>
         <button onclick="event.stopPropagation();delTx('${t.id}')" style="font-size:13px;background:none;border:none;color:var(--text3);cursor:pointer;padding:1px 4px;border-radius:4px">✕</button>
       </div>
     </div>`;
@@ -666,16 +645,19 @@ function filterByPeriod(txs,period){
 }
 
 function renderTxPage(){
-  const wf=document.getElementById('f-wallet')?.value||'all';
-  const tf=document.getElementById('f-type')?.value||'';
-  const rows=filterByPeriod(transactions,txPeriod).filter(t=>(wf==='all'||t.walletId===wf)&&(!tf||t.type===tf));
+  const fwEl=document.getElementById('f-wallet');
+  const tfEl=document.getElementById('f-type');
+  const wf=fwEl?.value||'all';
+  const tf=tfEl?.value||'';
+  const rows=filterByPeriod(transactions,txPeriod).filter(t=>(wf==='all'||t.walletId===wf||t.toWalletId===wf)&&(!tf||t.type===tf));
   document.getElementById('tx-list').innerHTML=rows.length?txItemsHTML(rows):'<div class="empty">Tidak ada transaksi</div>';
 }
 
 function setPeriod(p,el){
   txPeriod=p;
-  document.querySelectorAll('#page-tx .ptab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');renderTxPage();
+  updateTxPeriodButtons();
+  if(el) el.classList.add('active');
+  renderTxPage();
 }
 
 // ════════════════════════════════════════
@@ -693,9 +675,9 @@ function renderBudgetPage(){
     const c=catBy(b.cat);
     const col=pct>=100?'var(--red)':pct>=80?'var(--amber)':'var(--green)';
     return `<div class="budget-item">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;gap:.5rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
         <div style="display:flex;align-items:center;gap:.5rem"><span style="font-size:20px">${c.i}</span><div><div style="font-size:13px;font-weight:600">${c.l}</div><div style="font-size:11px;color:var(--text2)">${fmt(spent)} / ${fmt(b.limit)}</div></div></div>
-        <div style="display:flex;align-items:center;gap:.5rem"><span style="font-size:12px;font-weight:700;color:${col}">${pct}%</span><button class="btn btn-xs" onclick="openEditBudget('${b.id}')">Edit</button><button onclick="delBudget('${b.id}')" style="font-size:12px;background:none;border:none;color:var(--text3);cursor:pointer">✕</button></div>
+        <div style="display:flex;align-items:center;gap:.5rem"><span style="font-size:12px;font-weight:700;color:${col}">${pct}%</span><button onclick="delBudget('${b.id}')" style="font-size:12px;background:none;border:none;color:var(--text3);cursor:pointer">✕</button></div>
       </div>
       <div class="budget-track"><div class="budget-fill" style="width:${pct}%;background:${col}"></div></div>
     </div>`;
@@ -707,39 +689,18 @@ function fillCatSel(){
   s.innerHTML=CATS.map(c=>`<option value="${c.id}">${c.i} ${c.l}</option>`).join('');
 }
 
-function openEditBudget(id){
-  const b=budgets.find(x=>x.id===id);if(!b)return;
-  fillCatSel();
-  document.getElementById('bgt-id').value=b.id;
-  document.getElementById('bgt-cat').value=b.cat;
-  document.getElementById('bgt-limit').value=fmtNum(b.limit);
-  document.getElementById('bgt-period').value=b.period||'monthly';
-  document.getElementById('mbudget-title').textContent='Edit Anggaran';
-  document.getElementById('mbudget-save-btn').textContent='Update';
-  openM('mbudget');
-  document.getElementById('bgt-id').value=b.id;
-  document.getElementById('bgt-cat').value=b.cat;
-  document.getElementById('bgt-limit').value=fmtNum(b.limit);
-  document.getElementById('bgt-period').value=b.period||'monthly';
-  document.getElementById('mbudget-title').textContent='Edit Anggaran';
-  document.getElementById('mbudget-save-btn').textContent='Update';
-}
-
 async function saveBudget(){
-  const editId=document.getElementById('bgt-id').value;
   const cat=document.getElementById('bgt-cat').value;
-  const limit=parseNum(document.getElementById('bgt-limit').value);
+  const limit=parseFloat(document.getElementById('bgt-limit').value);
   const period=document.getElementById('bgt-period').value;
   if(!cat||!limit){alert2('Lengkapi semua field','err');return;}
-  const clash=budgets.find(b=>b.cat===cat&&b.id!==editId);
-  if(clash){alert2('Kategori ini sudah punya anggaran. Edit yang lama saja.','err');return;}
-  const existing=editId?budgets.find(b=>b.id===editId):budgets.find(b=>b.cat===cat);
+  const existing=budgets.find(b=>b.cat===cat);
   const id=existing?.id||'b'+uid();
   setSS('sync');
   try{
-    if(existing){await dbU(`budgets?id=eq.${id}`,{cat,limit_amount:limit,period});existing.cat=cat;existing.limit=limit;existing.period=period;}
+    if(existing){await dbU(`budgets?id=eq.${id}`,{limit_amount:limit,period});existing.limit=limit;existing.period=period;}
     else{await dbP('budgets',{id,cat,limit_amount:limit,period});budgets.push({id,cat,limit,period});}
-    closeM('mbudget');setSS('ok');renderBudgetPage();renderHome();alert2(existing?'Anggaran diupdate':'Anggaran disimpan','ok');
+    closeM('mbudget');setSS('ok');renderBudgetPage();renderHome();alert2('Anggaran disimpan','ok');
   }catch(e){setSS('err');alert2('Gagal: '+e.message,'err');}
 }
 
@@ -769,7 +730,6 @@ function renderBills(){
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
         <div style="font-size:13px;font-weight:700">${fmt(b.amount)}</div>
         <div style="display:flex;gap:4px">
-          <button class="btn btn-xs" onclick="openEditBill('${b.id}')">Edit</button>
           <button class="btn btn-xs btn-g" onclick="payBill('${b.id}')">Bayar</button>
           <button onclick="delBill('${b.id}')" style="font-size:12px;background:none;border:none;color:var(--text3);cursor:pointer">✕</button>
         </div>
@@ -778,43 +738,21 @@ function renderBills(){
   }).join('');
 }
 
-function openEditBill(id){
-  const b=bills.find(x=>x.id===id);if(!b)return;
-  openM('mbill');
-  document.getElementById('bill-id').value=b.id;
-  document.getElementById('bill-name').value=b.name;
-  document.getElementById('bill-amt').value=fmtNum(b.amount);
-  document.getElementById('bill-wid').value=b.walletId||'';
-  document.getElementById('bill-freq').value=b.freq||'monthly';
-  document.getElementById('bill-day').value=b.day||1;
-  document.getElementById('bill-cat').value=b.cat||'bill';
-  document.getElementById('bill-auto').checked=!!b.auto;
-  document.getElementById('mbill-title').textContent='Edit Tagihan Berulang';
-  document.getElementById('mbill-save-btn').textContent='Update';
-}
-
 async function saveBill(){
-  const editId=document.getElementById('bill-id').value;
   const name=document.getElementById('bill-name').value.trim();
-  const amt=parseNum(document.getElementById('bill-amt').value);
+  const amt=parseFloat(document.getElementById('bill-amt').value);
   const wid=document.getElementById('bill-wid').value;
   const freq=document.getElementById('bill-freq').value;
   const day=parseInt(document.getElementById('bill-day').value)||1;
   const cat=document.getElementById('bill-cat').value.trim()||'bill';
   const auto=document.getElementById('bill-auto').checked;
   if(!name||!amt){alert2('Lengkapi nama dan jumlah','err');return;}
-  const id=editId||'bl'+uid();
+  const id='bl'+uid();
   setSS('sync');
   try{
-    if(editId){
-      await dbU(`bills?id=eq.${id}`,{name,amount:amt,wallet_id:wid||null,freq,due_day:day,cat,auto_record:auto});
-      const bill=bills.find(x=>x.id===id);
-      if(bill){bill.name=name;bill.amount=amt;bill.walletId=wid;bill.freq=freq;bill.day=day;bill.cat=cat;bill.auto=auto;}
-    } else {
-      await dbP('bills',{id,name,amount:amt,wallet_id:wid||null,freq,due_day:day,cat,auto_record:auto});
-      bills.push({id,name,amount:amt,walletId:wid,freq,day,cat,auto});
-    }
-    closeM('mbill');setSS('ok');renderBills();renderHome();alert2(editId?'Tagihan diupdate':'Tagihan ditambahkan','ok');
+    await dbP('bills',{id,name,amount:amt,wallet_id:wid||null,freq,due_day:day,cat,auto_record:auto});
+    bills.push({id,name,amount:amt,walletId:wid,freq,day,cat,auto});
+    closeM('mbill');setSS('ok');renderBills();renderHome();alert2('Tagihan ditambahkan','ok');
   }catch(e){setSS('err');alert2('Gagal: '+e.message,'err');}
 }
 
@@ -863,58 +801,34 @@ function renderDebts(){
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
         <div style="font-size:13px;font-weight:700;color:${col}">${fmt(d.amount)}</div>
-        <div style="display:flex;gap:4px"><button class="btn btn-xs" onclick="openEditDebt('${d.id}')">Edit</button><button class="btn btn-xs btn-g" onclick="settleDebt('${d.id}')">Lunas</button></div>
+        <button class="btn btn-xs btn-g" onclick="settleDebt('${d.id}')">Lunas</button>
       </div>
     </div>`;
   }).join('');
 }
 
 function openAddDebt(){
-  document.getElementById('debt-id').value='';
   document.getElementById('debt-mode').value=debtTab;
   document.getElementById('mdebt-title').textContent=debtTab==='lend'?'Tambah Piutang':'Tambah Hutang';
-  document.getElementById('mdebt-save-btn').textContent='Simpan';
   ['debt-person','debt-amt','debt-due','debt-note'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('debt-date').value=todayStr();
   openM('mdebt');
 }
 
-function openEditDebt(id){
-  const d=debts.find(x=>x.id===id);if(!d)return;
-  document.getElementById('debt-id').value=d.id;
-  document.getElementById('debt-mode').value=d.mode;
-  document.getElementById('debt-person').value=d.person;
-  document.getElementById('debt-amt').value=fmtNum(d.amount);
-  document.getElementById('debt-date').value=d.date||todayStr();
-  document.getElementById('debt-due').value=d.due||'';
-  document.getElementById('debt-note').value=d.note||'';
-  document.getElementById('mdebt-title').textContent=d.mode==='lend'?'Edit Piutang':'Edit Hutang';
-  document.getElementById('mdebt-save-btn').textContent='Update';
-  openM('mdebt');
-  document.getElementById('debt-id').value=d.id;
-}
-
 async function saveDebt(){
-  const editId=document.getElementById('debt-id').value;
   const mode=document.getElementById('debt-mode').value;
   const person=document.getElementById('debt-person').value.trim();
-  const amt=parseNum(document.getElementById('debt-amt').value);
+  const amt=parseFloat(document.getElementById('debt-amt').value);
   const date=document.getElementById('debt-date').value;
   const due=document.getElementById('debt-due').value;
   const note=document.getElementById('debt-note').value.trim();
   if(!person||!amt){alert2('Lengkapi nama dan jumlah','err');return;}
-  const id=editId||'d'+uid();
+  const id='d'+uid();
   setSS('sync');
   try{
-    if(editId){
-      await dbU(`debts?id=eq.${id}`,{mode,person,amount:amt,date,due_date:due||null,note});
-      const debt=debts.find(x=>x.id===id);
-      if(debt){debt.mode=mode;debt.person=person;debt.amount=amt;debt.date=date;debt.due=due;debt.note=note;}
-    } else {
-      await dbP('debts',{id,mode,person,amount:amt,date,due_date:due||null,note,settled:false});
-      debts.push({id,mode,person,amount:amt,date,due,note,settled:false});
-    }
-    closeM('mdebt');setSS('ok');renderDebts();alert2((mode==='lend'?'Piutang':'Hutang')+(editId?' diupdate':' ditambahkan'),'ok');
+    await dbP('debts',{id,mode,person,amount:amt,date,due_date:due||null,note,settled:false});
+    debts.push({id,mode,person,amount:amt,date,due,note,settled:false});
+    closeM('mdebt');setSS('ok');renderDebts();alert2((mode==='lend'?'Piutang':'Hutang')+' ditambahkan','ok');
   }catch(e){setSS('err');alert2('Gagal: '+e.message,'err');}
 }
 
@@ -957,7 +871,7 @@ function walletCard(w,isChild){
       <div style="font-size:11px;color:var(--text3);margin-top:1px">+${fmtK(inc)} masuk · −${fmtK(exp)} keluar</div>
     </div>
     <div style="text-align:right;flex-shrink:0">
-      <div style="font-size:15px;font-weight:700;color:${moneyTone(w.balance)}">${fmt(w.balance)}</div>
+      <div style="font-size:15px;font-weight:700;color:${w.color}">${fmt(w.balance)}</div>
       <div style="display:flex;gap:6px;margin-top:5px;justify-content:flex-end">
         <button onclick="openEditWallet('${w.id}')" style="font-size:11px;padding:3px 8px;border-radius:5px;border:.5px solid var(--bd2);background:transparent;color:var(--text2);cursor:pointer">Edit</button>
         <button onclick="delW('${w.id}')" style="font-size:11px;padding:3px 8px;border-radius:5px;border:.5px solid var(--bd2);background:transparent;color:var(--red);cursor:pointer">Hapus</button>
@@ -979,34 +893,12 @@ function openM(id){
     document.getElementById('w-bal').value='';
     document.getElementById('w-hid').checked=false;
     document.getElementById('w-bal-row').style.display='';
-    document.getElementById('w-bal-hint').textContent='Isi saldo awal untuk dompet baru.';
     document.getElementById('mw-title').textContent='Tambah Dompet';
     document.getElementById('mw-save-btn').textContent='Simpan';
     buildCP();
   }
   if(id==='mtx'){document.getElementById('tx-date').value=todayStr();fillWSelects();renderCatGrid();setTxType(selTxType);}
-  if(id==='mbudget'){
-    document.getElementById('bgt-id').value='';
-    document.getElementById('mbudget-title').textContent='Tambah Anggaran';
-    document.getElementById('mbudget-save-btn').textContent='Simpan';
-    fillCatSel();
-    document.getElementById('bgt-cat').value=CATS[0]?.id||'';
-    document.getElementById('bgt-limit').value='';
-    document.getElementById('bgt-period').value='monthly';
-  }
-  if(id==='mbill'){
-    fillWSelects();
-    document.getElementById('bill-id').value='';
-    document.getElementById('mbill-title').textContent='Tambah Tagihan Berulang';
-    document.getElementById('mbill-save-btn').textContent='Simpan';
-    document.getElementById('bill-name').value='';
-    document.getElementById('bill-amt').value='';
-    document.getElementById('bill-wid').value='';
-    document.getElementById('bill-freq').value='monthly';
-    document.getElementById('bill-day').value='';
-    document.getElementById('bill-cat').value='bill';
-    document.getElementById('bill-auto').checked=true;
-  }
+  if(id==='mbill') fillWSelects();
   document.getElementById(id).classList.add('open');
 }
 
@@ -1016,9 +908,8 @@ function openEditWallet(id){
   document.getElementById('w-pid').value=w.parentId||'';
   document.getElementById('w-name').value=w.name;
   document.getElementById('w-type').value=w.type;
-  document.getElementById('w-bal').value=fmtNum(w.balance);
-  document.getElementById('w-bal-row').style.display='';
-  document.getElementById('w-bal-hint').textContent='Jika saldo diubah, sistem akan membuat transaksi penyesuaian otomatis agar histori tetap sinkron.';
+  document.getElementById('w-bal').value='';
+  document.getElementById('w-bal-row').style.display='none'; // hide saldo awal saat edit
   document.getElementById('w-hid').checked=w.hidden;
   document.getElementById('mw-title').textContent='Edit Dompet';
   document.getElementById('mw-save-btn').textContent='Update';
@@ -1030,12 +921,6 @@ function openEditWallet(id){
 
 function closeM(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){
-    const openOverlay=document.querySelector('.overlay.open:last-of-type')||document.querySelector('.overlay.open');
-    if(openOverlay)openOverlay.classList.remove('open');
-  }
-});
 
 function buildCP(){
   selColor=PAL[0];
@@ -1050,53 +935,18 @@ async function saveWallet(){
   const hidden=document.getElementById('w-hid').checked;
   const pid=document.getElementById('w-pid').value||null;
   const editId=document.getElementById('w-id').value;
-  const balInput=document.getElementById('w-bal').value;
-  const bal=balInput===''?0:parseNum(balInput);
-  if(Number.isNaN(bal)||bal<0){alert2('Saldo dompet tidak valid','err');return;}
 
   setSS('sync');
   try{
     if(editId){
       // ── EDIT MODE ──
+      await dbU(`wallets?id=eq.${editId}`,{name,type,color:selColor,hidden,parent_id:pid});
       const w=wById(editId);
-      const prevBal=w?Number(w.balance)||0:0;
-      const diff=+(bal-prevBal).toFixed(2);
-      const patches=[dbU(`wallets?id=eq.${editId}`,{name,type,color:selColor,hidden,parent_id:pid,balance:bal})];
-      let adjLocal=null;
-      if(diff!==0){
-        const adjType=diff>0?'income':'expense';
-        const adjAmt=Math.abs(diff);
-        const adjId='t'+uid();
-        const adjDesc=`Penyesuaian saldo dompet: ${name}`;
-        const adjDate=todayStr();
-        patches.push(dbP('transactions',{
-          id:adjId,
-          date:adjDate,
-          description:adjDesc,
-          type:adjType,
-          amount:adjAmt,
-          cat:'other',
-          wallet_id:editId,
-          to_wallet_id:null
-        }));
-        adjLocal={
-          id:adjId,
-          date:adjDate,
-          desc:adjDesc,
-          type:adjType,
-          amount:adjAmt,
-          cat:'other',
-          walletId:editId,
-          toWalletId:null
-        };
-      }
-      await Promise.all(patches);
-      if(w){w.name=name;w.type=type;w.color=selColor;w.hidden=hidden;w.parentId=pid;w.balance=bal;}
-      if(adjLocal)transactions.unshift(adjLocal);
-      closeM('mwallet');setSS('ok');renderAll();
-      alert2(diff!==0?'Dompet diupdate dan penyesuaian saldo dicatat sebagai transaksi':'Dompet berhasil diupdate','ok');
+      if(w){w.name=name;w.type=type;w.color=selColor;w.hidden=hidden;w.parentId=pid;}
+      closeM('mwallet');setSS('ok');renderAll();alert2('Dompet berhasil diupdate','ok');
     } else {
       // ── ADD MODE ──
+      const bal=parseFloat(document.getElementById('w-bal').value)||0;
       const id='w'+uid();
       await dbP('wallets',{id,name,type,color:selColor,balance:bal,hidden,parent_id:pid,envelopes:[]});
       wallets.push({id,name,type,color:selColor,balance:bal,hidden,parentId:pid,envelopes:[]});
@@ -1125,7 +975,7 @@ function fillWSelects(){
     el.innerHTML='<option value="">— Pilih dompet —</option>'+wallets.map(w=>`<option value="${w.id}">${w.parentId?'↳ ':''}${w.name}${w.hidden?' [sembunyi]':''}</option>`).join('');
   });
   const fw=document.getElementById('f-wallet');
-  if(fw)fw.innerHTML='<option value="all">Semua dompet</option>'+wallets.map(w=>`<option value="${w.id}">${w.name}</option>`).join('');
+  if(fw){fw.innerHTML='<option value="all">Semua dompet</option>'+wallets.map(w=>`<option value="${w.id}">${w.name}</option>`).join('');fw.value=selWallet==='all'?'all':selWallet;}
 }
 
 // ════════════════════════════════════════
@@ -1155,7 +1005,7 @@ function renderCatGrid(){
 function selCat(id){selTxCat=id;document.getElementById('tx-cat').value=id;renderCatGrid();}
 
 async function saveTx(){
-  const amt=parseNum(document.getElementById('tx-amt').value);
+  const amt=parseFloat(document.getElementById('tx-amt').value);
   const date=document.getElementById('tx-date').value;
   const wid=document.getElementById('tx-wid').value;
   const desc=document.getElementById('tx-desc').value.trim();
@@ -1195,7 +1045,7 @@ function openEditTx(id){
   document.getElementById('etx-old-wid').value=t.walletId||'';
   document.getElementById('etx-old-towid').value=t.toWalletId||'';
   // Fill form
-  document.getElementById('etx-amt').value=fmtNum(t.amount);
+  document.getElementById('etx-amt').value=t.amount;
   document.getElementById('etx-date').value=t.date;
   document.getElementById('etx-desc').value=t.desc||'';
   document.getElementById('etx-cat').value=t.cat||'other';
@@ -1239,11 +1089,11 @@ function selEditCat(id){selEditTxCat=id;document.getElementById('etx-cat').value
 async function saveEditTx(){
   const id=document.getElementById('etx-id').value;
   const oldType=document.getElementById('etx-old-type').value;
-  const oldAmt=parseNum(document.getElementById('etx-old-amt').value);
+  const oldAmt=parseFloat(document.getElementById('etx-old-amt').value);
   const oldWid=document.getElementById('etx-old-wid').value;
   const oldTowid=document.getElementById('etx-old-towid').value;
 
-  const newAmt=parseNum(document.getElementById('etx-amt').value);
+  const newAmt=parseFloat(document.getElementById('etx-amt').value);
   const newDate=document.getElementById('etx-date').value;
   const newWid=document.getElementById('etx-wid').value;
   const newDesc=document.getElementById('etx-desc').value.trim();
