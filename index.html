@@ -90,6 +90,10 @@ button{font-family:inherit;cursor:pointer}
 .inspect-stat{background:var(--bg2);border-radius:var(--r);padding:.75rem}
 .inspect-stat-lbl{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
 .inspect-stat-val{font-size:17px;font-weight:700}
+#inspect-tx,#recent-tx,#tx-list{max-height:420px;overflow:auto;scrollbar-width:thin}
+#inspect-tx::-webkit-scrollbar,#recent-tx::-webkit-scrollbar,#tx-list::-webkit-scrollbar{width:8px;height:8px}
+#inspect-tx::-webkit-scrollbar-thumb,#recent-tx::-webkit-scrollbar-thumb,#tx-list::-webkit-scrollbar-thumb{background:#2a2f3b;border-radius:999px}
+@media(max-width:768px){#inspect-tx,#recent-tx,#tx-list{max-height:320px}}
 @media(min-width:992px){.inspect-stats{grid-template-columns:repeat(6,minmax(0,1fr));}}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{text-align:left;font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;padding:6px 0;border-bottom:.5px solid var(--bd)}
@@ -574,8 +578,50 @@ function selW(id){selWallet=id;renderAll();}
 // ════════════════════════════════════════
 // HOME
 // ════════════════════════════════════════
+function walletScopedTransactions(id){
+  return transactions.filter(t=>t.walletId===id||t.toWalletId===id).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+}
+
+function renderInspect(){
+  const card=document.getElementById('inspect-card');
+  const recentCard=document.getElementById('recent-card');
+  if(!card||!recentCard) return;
+  if(selWallet==='all'){
+    card.style.display='none';
+    recentCard.style.display='block';
+    return;
+  }
+  const w=wById(selWallet);
+  const rows=walletScopedTransactions(selWallet);
+  const income=rows.filter(t=>t.type==='income'&&t.walletId===selWallet).reduce((s,t)=>s+t.amount,0);
+  const expense=rows.filter(t=>t.type==='expense'&&t.walletId===selWallet).reduce((s,t)=>s+t.amount,0);
+  const transferIn=rows.filter(t=>t.type==='transfer'&&t.toWalletId===selWallet).reduce((s,t)=>s+t.amount,0);
+  const transferOut=rows.filter(t=>t.type==='transfer'&&t.walletId===selWallet).reduce((s,t)=>s+t.amount,0);
+  document.getElementById('inspect-title').textContent='Inspect Dompet · '+(w?.name||'-');
+  document.getElementById('inspect-stats').innerHTML=`
+    <div class="inspect-stat"><div class="inspect-stat-lbl">Saldo Sekarang</div><div class="inspect-stat-val" style="color:${moneyTone(w?.balance||0)}">${fmtSigned(w?.balance||0,{rp:true})}</div></div>
+    <div class="inspect-stat"><div class="inspect-stat-lbl">Jumlah Transaksi</div><div class="inspect-stat-val">${fmtNum(rows.length)}</div></div>
+    <div class="inspect-stat"><div class="inspect-stat-lbl">Pemasukan</div><div class="inspect-stat-val" style="color:var(--green)">${fmtSigned(income,{rp:true})}</div></div>
+    <div class="inspect-stat"><div class="inspect-stat-lbl">Pengeluaran</div><div class="inspect-stat-val" style="color:var(--red)">${fmtSigned(expense,{rp:true})}</div></div>
+    <div class="inspect-stat"><div class="inspect-stat-lbl">Transfer Masuk</div><div class="inspect-stat-val" style="color:var(--blue)">${fmtSigned(transferIn,{rp:true})}</div></div>
+    <div class="inspect-stat"><div class="inspect-stat-lbl">Transfer Keluar</div><div class="inspect-stat-val">${fmtSigned(transferOut,{rp:true})}</div></div>`;
+  document.getElementById('inspect-tx').innerHTML=rows.length?txItemsHTML(rows):'<div class="empty">Belum ada transaksi untuk dompet ini</div>';
+  card.style.display='block';
+  recentCard.style.display='none';
+}
+
+function openEditSelectedWallet(){
+  if(selWallet==='all') return;
+  openEditWallet(selWallet);
+}
+
+function updateTxPeriodButtons(){
+  const map={all:'Semua',week:'Minggu',month:'Bulan',year:'Tahun'};
+  document.querySelectorAll('#page-tx .ptab').forEach(btn=>btn.classList.toggle('active', btn.textContent.trim()===map[txPeriod]));
+}
+
 function renderHome(){
-  renderMetrics();
+  renderInspect();
   // Recent tx
   const rtEl=document.getElementById('recent-tx');
   const recent=transactions.slice(0,6);
