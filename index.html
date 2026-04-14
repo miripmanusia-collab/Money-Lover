@@ -275,17 +275,18 @@ input[type=file]{display:none}
 <div class="overlay" id="mwallet"><div class="modal">
   <div class="modal-handle"></div>
   <div class="modal-title" id="mw-title">Tambah Dompet</div>
+  <input type="hidden" id="w-id">
   <input type="hidden" id="w-pid">
   <div class="form-row"><input type="text" id="w-name" placeholder="Nama dompet"></div>
   <div class="form-row">
     <select id="w-type"><option value="cash">Tunai</option><option value="bank">Bank</option><option value="ewallet">E-wallet</option><option value="savings">Tabungan</option><option value="investment">Investasi</option></select>
-    <input type="number" id="w-bal" placeholder="Saldo awal" min="0">
   </div>
+  <div id="w-bal-row" class="form-row"><input type="number" id="w-bal" placeholder="Saldo awal (hanya untuk dompet baru)" min="0"></div>
   <div class="form-row" style="align-items:center"><span class="flbl" style="margin:0 6px 0 0">Warna:</span><div class="cpick" id="cpick"></div></div>
   <div class="sep"></div>
   <div class="toggle-row"><label class="toggle"><input type="checkbox" id="w-hid"><span class="tsl"></span></label><span style="font-size:13px;color:var(--text2)">Sembunyikan dari total saldo</span></div>
-  <div class="hint">Dompet tersembunyi tetap bisa transfer tapi tidak dihitung di total</div>
-  <div class="modal-foot"><button class="btn" onclick="closeM('mwallet')">Batal</button><button class="btn btn-g" onclick="saveWallet()">Simpan</button></div>
+  <div class="hint">Dompet tersembunyi tetap bisa transfer tapi tidak dihitung di total keseluruhan</div>
+  <div class="modal-foot"><button class="btn" onclick="closeM('mwallet')">Batal</button><button class="btn btn-g" id="mw-save-btn" onclick="saveWallet()">Simpan</button></div>
 </div></div>
 
 <!-- Modal: Anggaran -->
@@ -760,33 +761,79 @@ async function settleDebt(id){
 function renderWalletFull(){
   const el=document.getElementById('wallet-full');
   if(!wallets.length){el.innerHTML='<div class="empty">Belum ada dompet</div>';return;}
-  el.innerHTML=wallets.map(w=>{
-    const inc=transactions.filter(t=>t.type==='income'&&t.walletId===w.id).reduce((s,t)=>s+t.amount,0);
-    const exp=transactions.filter(t=>t.type==='expense'&&t.walletId===w.id).reduce((s,t)=>s+t.amount,0);
-    return `<div class="card" style="display:flex;align-items:center;gap:.75rem">
-      <div style="width:44px;height:44px;border-radius:50%;background:${w.color}22;color:${w.color};display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0">${inits(w.name)}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:14px;font-weight:700">${w.name}${w.hidden?'<span class="whid" style="margin-left:5px">tersembunyi</span>':''}</div>
-        <div style="font-size:11px;color:var(--text2)">${WTYPES[w.type]||w.type}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px">+${fmtK(inc)} masuk · −${fmtK(exp)} keluar</div>
+  // Group: roots first, then children
+  const roots=wallets.filter(w=>!w.parentId);
+  const children=pid=>wallets.filter(w=>w.parentId===pid);
+  let html='';
+  roots.forEach(w=>{
+    html+=walletCard(w,false);
+    children(w.id).forEach(c=>{ html+=walletCard(c,true); });
+  });
+  el.innerHTML=html;
+}
+
+function walletCard(w,isChild){
+  const inc=transactions.filter(t=>t.type==='income'&&t.walletId===w.id).reduce((s,t)=>s+t.amount,0);
+  const exp=transactions.filter(t=>t.type==='expense'&&t.walletId===w.id).reduce((s,t)=>s+t.amount,0);
+  const hiddenBadge=w.hidden
+    ?`<span style="font-size:10px;padding:2px 7px;border-radius:99px;background:var(--grl);color:var(--grt);font-weight:600;margin-left:5px">exclude total</span>`
+    :`<span style="font-size:10px;padding:2px 7px;border-radius:99px;background:var(--gl);color:var(--gt);font-weight:600;margin-left:5px">include total</span>`;
+  return `<div class="card" style="display:flex;align-items:center;gap:.75rem;${isChild?'margin-left:1.5rem;border-left:3px solid '+w.color:''}">
+    <div style="width:42px;height:42px;border-radius:50%;background:${w.color}22;color:${w.color};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0">${inits(w.name)}</div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:14px;font-weight:700;display:flex;align-items:center;flex-wrap:wrap;gap:2px">${w.name}${hiddenBadge}</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:1px">${WTYPES[w.type]||w.type}${isChild?' · sub dompet':''}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:1px">+${fmtK(inc)} masuk · −${fmtK(exp)} keluar</div>
+    </div>
+    <div style="text-align:right;flex-shrink:0">
+      <div style="font-size:15px;font-weight:700;color:${w.color}">${fmt(w.balance)}</div>
+      <div style="display:flex;gap:6px;margin-top:5px;justify-content:flex-end">
+        <button onclick="openEditWallet('${w.id}')" style="font-size:11px;padding:3px 8px;border-radius:5px;border:.5px solid var(--bd2);background:transparent;color:var(--text2);cursor:pointer">Edit</button>
+        <button onclick="delW('${w.id}')" style="font-size:11px;padding:3px 8px;border-radius:5px;border:.5px solid var(--bd2);background:transparent;color:var(--red);cursor:pointer">Hapus</button>
       </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-size:15px;font-weight:700;color:${w.color}">${fmt(w.balance)}</div>
-        <button onclick="delW('${w.id}')" style="font-size:11px;background:none;border:none;color:var(--text3);cursor:pointer;margin-top:4px;display:block">Hapus</button>
-      </div>
-    </div>`;
-  }).join('');
+    </div>
+  </div>`;
 }
 
 // ════════════════════════════════════════
 // WALLET CRUD
 // ════════════════════════════════════════
 function openM(id){
-  if(id==='mwallet') buildCP();
+  if(id==='mwallet'){
+    // New wallet mode
+    document.getElementById('w-id').value='';
+    document.getElementById('w-pid').value='';
+    document.getElementById('w-name').value='';
+    document.getElementById('w-type').value='cash';
+    document.getElementById('w-bal').value='';
+    document.getElementById('w-hid').checked=false;
+    document.getElementById('w-bal-row').style.display='';
+    document.getElementById('mw-title').textContent='Tambah Dompet';
+    document.getElementById('mw-save-btn').textContent='Simpan';
+    buildCP();
+  }
   if(id==='mtx'){document.getElementById('tx-date').value=todayStr();fillWSelects();renderCatGrid();setTxType(selTxType);}
   if(id==='mbill') fillWSelects();
   document.getElementById(id).classList.add('open');
 }
+
+function openEditWallet(id){
+  const w=wById(id);if(!w)return;
+  document.getElementById('w-id').value=w.id;
+  document.getElementById('w-pid').value=w.parentId||'';
+  document.getElementById('w-name').value=w.name;
+  document.getElementById('w-type').value=w.type;
+  document.getElementById('w-bal').value='';
+  document.getElementById('w-bal-row').style.display='none'; // hide saldo awal saat edit
+  document.getElementById('w-hid').checked=w.hidden;
+  document.getElementById('mw-title').textContent='Edit Dompet';
+  document.getElementById('mw-save-btn').textContent='Update';
+  // Set color picker
+  selColor=w.color;
+  document.getElementById('cpick').innerHTML=PAL.map(c=>`<div onclick="pickC(this,'${c}')" style="background:${c}" class="${c===w.color?'picked':''}"></div>`).join('');
+  document.getElementById('mwallet').classList.add('open');
+}
+
 function closeM(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 
@@ -799,16 +846,27 @@ function pickC(el,c){document.querySelectorAll('#cpick div').forEach(d=>d.classL
 async function saveWallet(){
   const name=document.getElementById('w-name').value.trim();
   if(!name){alert2('Masukkan nama dompet','err');return;}
-  const bal=parseFloat(document.getElementById('w-bal').value)||0;
   const type=document.getElementById('w-type').value;
   const hidden=document.getElementById('w-hid').checked;
   const pid=document.getElementById('w-pid').value||null;
-  const id='w'+uid();
+  const editId=document.getElementById('w-id').value;
+
   setSS('sync');
   try{
-    await dbP('wallets',{id,name,type,color:selColor,balance:bal,hidden,parent_id:pid,envelopes:[]});
-    wallets.push({id,name,type,color:selColor,balance:bal,hidden,parentId:pid,envelopes:[]});
-    closeM('mwallet');setSS('ok');renderAll();alert2('Dompet ditambahkan','ok');
+    if(editId){
+      // ── EDIT MODE ──
+      await dbU(`wallets?id=eq.${editId}`,{name,type,color:selColor,hidden,parent_id:pid});
+      const w=wById(editId);
+      if(w){w.name=name;w.type=type;w.color=selColor;w.hidden=hidden;w.parentId=pid;}
+      closeM('mwallet');setSS('ok');renderAll();alert2('Dompet berhasil diupdate','ok');
+    } else {
+      // ── ADD MODE ──
+      const bal=parseFloat(document.getElementById('w-bal').value)||0;
+      const id='w'+uid();
+      await dbP('wallets',{id,name,type,color:selColor,balance:bal,hidden,parent_id:pid,envelopes:[]});
+      wallets.push({id,name,type,color:selColor,balance:bal,hidden,parentId:pid,envelopes:[]});
+      closeM('mwallet');setSS('ok');renderAll();alert2('Dompet ditambahkan','ok');
+    }
   }catch(e){setSS('err');alert2('Gagal: '+e.message,'err');}
 }
 
