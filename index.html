@@ -324,6 +324,43 @@ input[type=file]{display:none}
   <div class="modal-foot"><button class="btn" onclick="closeM('mdebt')">Batal</button><button class="btn btn-g" onclick="saveDebt()">Simpan</button></div>
 </div></div>
 
+<!-- Modal: Edit Transaksi -->
+<div class="overlay" id="metx"><div class="modal">
+  <div class="modal-handle"></div>
+  <div class="modal-title">Edit Transaksi</div>
+  <input type="hidden" id="etx-id">
+  <input type="hidden" id="etx-old-type">
+  <input type="hidden" id="etx-old-amt">
+  <input type="hidden" id="etx-old-wid">
+  <input type="hidden" id="etx-old-towid">
+  <div class="ptabs" style="margin-bottom:.75rem" id="etx-type-tabs">
+    <button class="ptab" id="ett-income" onclick="setEditTxType('income')">Pemasukan</button>
+    <button class="ptab active" id="ett-expense" onclick="setEditTxType('expense')">Pengeluaran</button>
+    <button class="ptab" id="ett-transfer" onclick="setEditTxType('transfer')">Transfer</button>
+  </div>
+  <div class="form-row">
+    <input type="number" id="etx-amt" placeholder="Jumlah" inputmode="decimal" style="font-size:20px;font-weight:700;text-align:center;flex:1">
+  </div>
+  <div class="form-row">
+    <input type="date" id="etx-date" style="flex:1">
+    <select id="etx-wid" style="flex:1"></select>
+  </div>
+  <div id="etx-towid-row" class="form-row" style="display:none">
+    <select id="etx-towid" style="flex:1"></select>
+  </div>
+  <div class="form-row"><input type="text" id="etx-desc" placeholder="Keterangan"></div>
+  <div id="etx-cat-section">
+    <div class="flbl">Kategori</div>
+    <div class="cat-grid" id="etx-cat-grid"></div>
+    <input type="hidden" id="etx-cat">
+  </div>
+  <div class="modal-foot">
+    <button class="btn" style="color:var(--red);border-color:var(--red)" onclick="delTxFromEdit()">Hapus</button>
+    <button class="btn" onclick="closeM('metx')">Batal</button>
+    <button class="btn btn-g" onclick="saveEditTx()">Update</button>
+  </div>
+</div></div>
+
 <!-- Modal: Column Map -->
 <div class="overlay" id="mcol"><div class="modal">
   <div class="modal-handle"></div>
@@ -533,15 +570,15 @@ function txItemsHTML(rows){
     const cls=t.type==='income'?'ci':t.type==='transfer'?'ct':'ce';
     const c=catBy(t.cat);
     const bgCls=t.type==='income'?'var(--gl)':t.type==='transfer'?'var(--bl)':'var(--rl2)';
-    return `<div class="tx-item">
+    return `<div class="tx-item" onclick="openEditTx('${t.id}')" style="cursor:pointer">
       <div class="cat-avt" style="background:${bgCls}">${c.i}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.desc||c.l}</div>
-        <div style="font-size:11px;color:var(--text2)">${t.date} · ${wt2?w?.name+'→'+wt2.name:(w?.name||'?')}</div>
+        <div style="font-size:11px;color:var(--text2)">${t.date} · ${wt2?w?.name+'→'+wt2.name:(w?.name||'?')} · ${c.i} ${c.l}</div>
       </div>
       <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;margin-left:.5rem">
-        <span class="${cls}" style="font-size:13px">${sign}${fmtK(t.amount)}</span>
-        <button onclick="delTx('${t.id}')" style="font-size:13px;background:none;border:none;color:var(--text3);cursor:pointer;padding:1px 4px;border-radius:4px">✕</button>
+        <span class="${cls}" style="font-size:13px;font-weight:700">${sign}${fmtK(t.amount)}</span>
+        <button onclick="event.stopPropagation();delTx('${t.id}')" style="font-size:13px;background:none;border:none;color:var(--text3);cursor:pointer;padding:1px 4px;border-radius:4px">✕</button>
       </div>
     </div>`;
   }).join('');
@@ -944,9 +981,120 @@ async function saveTx(){
     closeM('mtx');
     document.getElementById('tx-amt').value='';
     document.getElementById('tx-desc').value='';
-    selTxCat='';
+    selTxCat='';selEditTxCat='';
     setSS('ok');renderAll();alert2('Transaksi dicatat','ok');
   }catch(e){setSS('err');alert2('Gagal: '+e.message,'err');}
+}
+
+let selEditTxType='expense', selEditTxCat='';
+
+function openEditTx(id){
+  const t=transactions.find(x=>x.id===id);if(!t)return;
+  // Fill hidden fields for reversal
+  document.getElementById('etx-id').value=t.id;
+  document.getElementById('etx-old-type').value=t.type;
+  document.getElementById('etx-old-amt').value=t.amount;
+  document.getElementById('etx-old-wid').value=t.walletId||'';
+  document.getElementById('etx-old-towid').value=t.toWalletId||'';
+  // Fill form
+  document.getElementById('etx-amt').value=t.amount;
+  document.getElementById('etx-date').value=t.date;
+  document.getElementById('etx-desc').value=t.desc||'';
+  document.getElementById('etx-cat').value=t.cat||'other';
+  selEditTxCat=t.cat||'other';
+  // Fill wallet selects
+  const wSels=['etx-wid','etx-towid'];
+  wSels.forEach(sid=>{
+    const el=document.getElementById(sid);if(!el)return;
+    el.innerHTML='<option value="">— Pilih dompet —</option>'+wallets.map(w=>`<option value="${w.id}">${w.parentId?'↳ ':''}${w.name}${w.hidden?' [sembunyi]':''}</option>`).join('');
+  });
+  document.getElementById('etx-wid').value=t.walletId||'';
+  document.getElementById('etx-towid').value=t.toWalletId||'';
+  // Set type tabs
+  setEditTxType(t.type);
+  document.getElementById('metx').classList.add('open');
+}
+
+function setEditTxType(type){
+  selEditTxType=type;
+  ['income','expense','transfer'].forEach(tp=>{
+    const el=document.getElementById('ett-'+tp);
+    if(el)el.className='ptab'+(tp===type?' active':'');
+  });
+  const toRow=document.getElementById('etx-towid-row');
+  const catSec=document.getElementById('etx-cat-section');
+  if(toRow)toRow.style.display=type==='transfer'?'flex':'none';
+  if(catSec)catSec.style.display=type==='transfer'?'none':'block';
+  renderEditCatGrid();
+}
+
+function renderEditCatGrid(){
+  const grid=document.getElementById('etx-cat-grid');if(!grid)return;
+  const incIds=['salary','bonus','freelance','other'];
+  const expIds=['food','transport','shop','bill','health','entertain','edu','family','invest','other'];
+  const cats=CATS.filter(c=>(selEditTxType==='income'?incIds:expIds).includes(c.id));
+  grid.innerHTML=cats.map(c=>`<button class="cat-btn${selEditTxCat===c.id?' sel':''}" onclick="selEditCat('${c.id}')"><span class="cat-icon">${c.i}</span>${c.l}</button>`).join('');
+}
+
+function selEditCat(id){selEditTxCat=id;document.getElementById('etx-cat').value=id;renderEditCatGrid();}
+
+async function saveEditTx(){
+  const id=document.getElementById('etx-id').value;
+  const oldType=document.getElementById('etx-old-type').value;
+  const oldAmt=parseFloat(document.getElementById('etx-old-amt').value);
+  const oldWid=document.getElementById('etx-old-wid').value;
+  const oldTowid=document.getElementById('etx-old-towid').value;
+
+  const newAmt=parseFloat(document.getElementById('etx-amt').value);
+  const newDate=document.getElementById('etx-date').value;
+  const newWid=document.getElementById('etx-wid').value;
+  const newDesc=document.getElementById('etx-desc').value.trim();
+  const newCat=document.getElementById('etx-cat').value||'other';
+  const newType=selEditTxType;
+  const newTowid=newType==='transfer'?document.getElementById('etx-towid').value:'';
+
+  if(!newAmt||!newDate||!newWid){alert2('Lengkapi jumlah, tanggal, dan dompet','err');return;}
+  if(newType==='transfer'&&!newTowid){alert2('Pilih dompet tujuan','err');return;}
+
+  setSS('sync');
+  try{
+    // Step 1: Balik efek transaksi lama ke saldo
+    const oldW=wById(oldWid), oldWt2=wById(oldTowid);
+    if(oldType==='income'&&oldW){oldW.balance-=oldAmt;await dbU(`wallets?id=eq.${oldW.id}`,{balance:oldW.balance});}
+    else if(oldType==='expense'&&oldW){oldW.balance+=oldAmt;await dbU(`wallets?id=eq.${oldW.id}`,{balance:oldW.balance});}
+    else if(oldType==='transfer'){
+      if(oldW){oldW.balance+=oldAmt;await dbU(`wallets?id=eq.${oldW.id}`,{balance:oldW.balance});}
+      if(oldWt2){oldWt2.balance-=oldAmt;await dbU(`wallets?id=eq.${oldWt2.id}`,{balance:oldWt2.balance});}
+    }
+
+    // Step 2: Terapkan efek transaksi baru
+    const newW=wById(newWid), newWt2=newTowid?wById(newTowid):null;
+    if(newType==='income'&&newW){newW.balance+=newAmt;await dbU(`wallets?id=eq.${newW.id}`,{balance:newW.balance});}
+    else if(newType==='expense'&&newW){newW.balance-=newAmt;await dbU(`wallets?id=eq.${newW.id}`,{balance:newW.balance});}
+    else if(newType==='transfer'){
+      if(newW){newW.balance-=newAmt;await dbU(`wallets?id=eq.${newW.id}`,{balance:newW.balance});}
+      if(newWt2){newWt2.balance+=newAmt;await dbU(`wallets?id=eq.${newWt2.id}`,{balance:newWt2.balance});}
+    }
+
+    // Step 3: Update transaksi di DB
+    const descFinal=newDesc||catBy(newCat).l;
+    await dbU(`transactions?id=eq.${id}`,{
+      date:newDate, description:descFinal, type:newType,
+      amount:newAmt, cat:newCat, wallet_id:newWid, to_wallet_id:newTowid||null
+    });
+
+    // Step 4: Update local state
+    const tx=transactions.find(x=>x.id===id);
+    if(tx){tx.date=newDate;tx.desc=descFinal;tx.type=newType;tx.amount=newAmt;tx.cat=newCat;tx.walletId=newWid;tx.toWalletId=newTowid||null;}
+
+    closeM('metx');setSS('ok');renderAll();alert2('Transaksi berhasil diupdate','ok');
+  }catch(e){setSS('err');alert2('Gagal update: '+e.message,'err');}
+}
+
+async function delTxFromEdit(){
+  const id=document.getElementById('etx-id').value;
+  closeM('metx');
+  await delTx(id);
 }
 
 async function delTx(id){
