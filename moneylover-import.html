@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Money Lover → Dompetku Importer</title>
+<style>
+:root{
+  --bg:#fff;--bg2:#f7f7f6;--bg3:#f0ede8;
+  --text:#111;--text2:#6b7280;--text3:#aaa;
+  --bd:rgba(0,0,0,0.09);--bd2:rgba(0,0,0,0.16);
+  --r:8px;--rl:12px;
+  --green:#1D9E75;--gd:#0F6E56;--gl:#E1F5EE;--gt:#085041;
+  --blue:#378ADD;--bl:#E6F1FB;--blt:#0C447C;
+  --red:#D85A30;--rl2:#FAECE7;--rt:#4A1B0C;
+  --amber:#BA7517;--al:#FAEEDA;--at:#412402;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#1c1c1e;--bg2:#2c2c2e;--bg3:#3a3a3c;
+  --text:#f2f2f7;--text2:#aeaeb2;--text3:#636366;
+  --bd:rgba(255,255,255,0.08);--bd2:rgba(255,255,255,0.16);
+  --gl:#0a2e1f;--gt:#9FE1CB;--bl:#0a1f35;--blt:#85B7EB;
+  --rl2:#2e1208;--rt:#F0997B;--al:#2e1e00;--at:#FAC775;
+}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg3);color:var(--text);min-height:100vh;padding:1.5rem 1rem}
+.wrap{max-width:720px;margin:0 auto}
+.brand{font-size:22px;font-weight:700;margin-bottom:.25rem}
+.brand span{color:var(--green)}
+.sub{font-size:14px;color:var(--text2);margin-bottom:1.5rem}
+.card{background:var(--bg);border:.5px solid var(--bd);border-radius:var(--rl);padding:1.25rem;margin-bottom:1rem}
+.card-title{font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.875rem}
+.btn{font-size:13px;padding:8px 16px;border-radius:var(--r);border:.5px solid var(--bd2);background:var(--bg);color:var(--text);cursor:pointer;font-family:inherit;transition:background .15s}
+.btn:hover{background:var(--bg2)}.btn:active{transform:scale(.97)}
+.btn-g{background:var(--green);color:#fff;border-color:var(--green)}.btn-g:hover{background:var(--gd)}
+.btn-r{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-lg{font-size:15px;padding:12px 24px;width:100%;font-weight:600}
+.drop-zone{border:2px dashed var(--bd2);border-radius:var(--rl);padding:2.5rem 1rem;text-align:center;cursor:pointer;transition:background .15s;background:var(--bg2)}
+.drop-zone:hover,.drop-zone.drag{background:var(--gl);border-color:var(--green)}
+.drop-zone-icon{font-size:40px;margin-bottom:.75rem}
+.drop-title{font-size:15px;font-weight:600;margin-bottom:.25rem}
+.drop-sub{font-size:13px;color:var(--text2)}
+input[type=file]{display:none}
+.step{display:flex;align-items:flex-start;gap:.875rem;padding:.75rem 0;border-bottom:.5px solid var(--bd)}
+.step:last-child{border-bottom:none}
+.step-num{width:28px;height:28px;border-radius:50%;background:var(--green);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step-num.done{background:var(--green)}
+.step-num.active{background:var(--blue)}
+.step-num.pending{background:var(--bg3);color:var(--text3)}
+.step-info{flex:1}
+.step-title{font-size:14px;font-weight:600;margin-bottom:2px}
+.step-desc{font-size:12px;color:var(--text2)}
+.progress-bar{height:8px;background:var(--bg3);border-radius:99px;overflow:hidden;margin:.75rem 0}
+.progress-fill{height:100%;background:var(--green);border-radius:99px;transition:width .3s}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.625rem;margin:.75rem 0}
+.stat{background:var(--bg2);border-radius:var(--r);padding:.75rem;text-align:center}
+.stat-val{font-size:20px;font-weight:700;margin-bottom:2px}
+.stat-lbl{font-size:11px;color:var(--text2)}
+.log{background:var(--bg2);border-radius:var(--r);padding:.875rem;font-size:12px;font-family:monospace;max-height:200px;overflow-y:auto;line-height:1.7;color:var(--text2)}
+.log-entry{display:block}
+.log-ok{color:var(--green)}.log-err{color:var(--red)}.log-info{color:var(--blue)}.log-warn{color:var(--amber)}
+.alert{font-size:13px;padding:10px 14px;border-radius:var(--r);margin-bottom:.75rem}
+.alert-ok{background:var(--gl);color:var(--gt)}
+.alert-err{background:var(--rl2);color:var(--rt)}
+.alert-warn{background:var(--al);color:var(--at)}
+.alert-info{background:var(--bl);color:var(--blt)}
+.tag{display:inline-block;font-size:11px;padding:2px 7px;border-radius:99px;background:var(--bg3);color:var(--text2);margin:2px}
+.wallet-chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:4px 10px;border-radius:99px;border:.5px solid var(--bd2);background:var(--bg);margin:3px;cursor:default}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;padding:6px 0;border-bottom:.5px solid var(--bd)}
+td{padding:6px 0;border-bottom:.5px solid var(--bd);color:var(--text)}
+tr:last-child td{border-bottom:none}
+.section{margin-bottom:1rem}
+.section-title{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:.5rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">Money Lover <span>→ Dompetku</span></div>
+  <div class="sub">Import semua data Money Lover kamu ke Dompetku secara otomatis</div>
+
+  <div id="step-file" class="card">
+    <div class="card-title">Step 1 — Upload file CSV dari Money Lover</div>
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('fi').click()">
+      <div class="drop-zone-icon">📂</div>
+      <div class="drop-title">Klik atau drag file CSV di sini</div>
+      <div class="drop-sub">File export dari Money Lover (.csv)<br>Format: Id, Tanggal, Kategori, Jumlah, Mata uang, Dompet, Catatan...</div>
+    </div>
+    <input type="file" id="fi" accept=".csv" onchange="handleFile(event)">
+  </div>
+
+  <div id="step-preview" class="card" style="display:none">
+    <div class="card-title">Step 2 — Preview &amp; Konfirmasi Data</div>
+    <div id="preview-content"></div>
+  </div>
+
+  <div id="step-import" class="card" style="display:none">
+    <div class="card-title">Step 3 — Import ke Dompetku</div>
+    <div id="import-content"></div>
+  </div>
+
+  <div id="step-done" class="card" style="display:none">
+    <div class="card-title">Selesai! 🎉</div>
+    <div id="done-content"></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════
+// CONFIG — sama dengan Dompetku
+// ════════════════════════════════
+const SUPA_URL = 'https://odctfktiqereynrvqyuc.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9kY3Rma3RpcWVyZXlucnZxeXVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNjA3OTIsImV4cCI6MjA5MTYzNjc5Mn0.sUH6t3NqMJFM6nh_w_pFKu-mwcei_r4xvG6rCBkXHPU';
+// ════════════════════════════════
+
+// Mapping kategori Money Lover → id kategori Dompetku
+const CAT_MAP = {
+  'makanan & minuman': 'food', 'cemilan': 'food', 'kafe': 'food', 'jajan': 'food', 'groceries': 'food', 'groceries store': 'food', 'indomart/alfamart': 'food',
+  'bensin': 'transport', 'gojek': 'transport', 'grab': 'transport', 'biaya parkir': 'transport', 'transportasi': 'transport',
+  'belanja': 'shop', 'pakaian': 'shop', 'alas kaki': 'shop', 'aksesoris': 'shop', 'elektronik': 'shop',
+  'tagihan & utilitas': 'bill', 'emoney': 'bill', 'ovo': 'bill', 'gopay': 'bill', 'digital product': 'bill',
+  'kesehatan & kebugaran': 'health', 'dokter': 'health', 'obat': 'health', 'olahraga': 'health',
+  'hiburan': 'entertain', 'bioskop': 'entertain',
+  'buku': 'edu', 'pendidikan': 'edu',
+  'keluarga': 'family', 'hadiah & donasi': 'family', 'amal': 'family', 'layanan rumah': 'family',
+  'investasi': 'invest', 'kumpulkan bunga': 'invest', 'bayar bunga': 'invest', 'asuransi': 'invest',
+  'gaji': 'salary', 'gajian': 'salary',
+  'pemasukan lainnya': 'other', 'biaya & cas': 'other', 'hutang': 'other', 'pembayaran kembali': 'other',
+  'transfer masuk': 'transfer_in', 'transfer keluar': 'transfer_out',
+};
+
+const WALLET_COLORS = ['#1D9E75','#378ADD','#D85A30','#BA7517','#993556','#534AB7','#639922','#D4537E','#888780','#0F6E56','#185FA5','#993C1D'];
+const uid = () => Math.random().toString(36).slice(2,10);
+const fmt = n => 'Rp ' + Math.round(Math.abs(n)).toLocaleString('id-ID');
+
+// Parse tanggal dd/MM/yyyy → yyyy-MM-dd
+function parseMLDate(d) {
+  if (!d) return null;
+  const parts = d.trim().split('/');
+  if (parts.length === 3) {
+    const [dd, mm, yyyy] = parts;
+    return `${yyyy}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
+  }
+  return null;
+}
+
+let parsedData = null;
+
+// ════════════════════════════════
+// STEP 1: Parse CSV
+// ════════════════════════════════
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const dz = document.getElementById('drop-zone');
+  dz.innerHTML = `<div class="drop-zone-icon">⏳</div><div class="drop-title">Membaca file...</div>`;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      parseMLCSV(ev.target.result, file.name);
+    } catch(err) {
+      dz.innerHTML = `<div class="drop-zone-icon">❌</div><div class="drop-title" style="color:var(--red)">Gagal baca file</div><div class="drop-sub">${err.message}</div>`;
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+  e.target.value = '';
+}
+
+// Drag & drop
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file) { document.getElementById('fi').files = e.dataTransfer.files; handleFile({target:{files:e.dataTransfer.files,value:''}}); }
+});
+
+function parseMLCSV(text, filename) {
+  // Detect separator (comma or semicolon)
+  const firstLine = text.split('\n')[0];
+  const sep = firstLine.includes(';') ? ';' : ',';
+
+  const lines = text.split('\n').map(l => l.replace(/\r/g, '').trim()).filter(Boolean);
+  if (lines.length < 2) throw new Error('File kosong atau format tidak dikenali');
+
+  const headers = lines[0].split(sep).map(h => h.trim().replace(/"/g, '').toLowerCase());
+  const idxOf = name => headers.indexOf(name);
+
+  const iId = idxOf('id');
+  const iDate = idxOf('tanggal');
+  const iCat = idxOf('kategori');
+  const iAmt = idxOf('jumlah');
+  const iWallet = idxOf('dompet');
+  const iNote = idxOf('catatan');
+
+  if (iDate === -1 || iAmt === -1) throw new Error('Kolom Tanggal atau Jumlah tidak ditemukan. Pastikan ini file export Money Lover.');
+
+  const rows = [];
+  const walletSet = new Set();
+  const catSet = new Set();
+  let skipped = 0;
+
+  for (let i = 1; i < lines.length; i++) {
+    // Handle quoted fields
+    const cols = splitCSVLine(lines[i], sep);
+    if (cols.length < 4) { skipped++; continue; }
+
+    const dateRaw = cols[iDate]?.trim().replace(/"/g,'') || '';
+    const catRaw = cols[iCat]?.trim().replace(/"/g,'') || '';
+    const amtRaw = cols[iAmt]?.trim().replace(/"/g,'') || '';
+    const walletRaw = cols[iWallet]?.trim().replace(/"/g,'') || '';
+    const noteRaw = iNote >= 0 ? (cols[iNote]?.trim().replace(/"/g,'') || '') : '';
+
+    const date = parseMLDate(dateRaw);
+    const amount = parseFloat(amtRaw);
+
+    if (!date || isNaN(amount)) { skipped++; continue; }
+
+    const catLower = catRaw.toLowerCase();
+    const catId = CAT_MAP[catLower] || 'other';
+
+    // Determine type
+    let type;
+    if (catId === 'transfer_in') type = 'transfer_in';
+    else if (catId === 'transfer_out') type = 'transfer_out';
+    else if (amount > 0) type = 'income';
+    else type = 'expense';
+
+    walletSet.add(walletRaw);
+    if (catId !== 'transfer_in' && catId !== 'transfer_out') catSet.add(catRaw);
+
+    rows.push({ date, cat: catId === 'transfer_in' || catId === 'transfer_out' ? 'other' : catId, catRaw, type, amount: Math.abs(amount), wallet: walletRaw, desc: noteRaw || catRaw, origAmt: amount });
+  }
+
+  parsedData = { rows, walletSet: [...walletSet].sort(), catSet: [...catSet].sort(), skipped, filename };
+  showPreview();
+}
+
+function splitCSVLine(line, sep) {
+  const result = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') { inQ = !inQ; }
+    else if (c === sep && !inQ) { result.push(cur); cur = ''; }
+    else cur += c;
+  }
+  result.push(cur);
+  return result;
+}
+
+// ════════════════════════════════
+// STEP 2: Preview
+// ════════════════════════════════
+function showPreview() {
+  const { rows, walletSet, catSet, skipped, filename } = parsedData;
+  const income = rows.filter(r => r.type === 'income');
+  const expense = rows.filter(r => r.type === 'expense');
+  const transferIn = rows.filter(r => r.type === 'transfer_in');
+  const transferOut = rows.filter(r => r.type === 'transfer_out');
+
+  // Date range
+  const dates = rows.map(r => r.date).sort();
+  const dateFrom = dates[0], dateTo = dates[dates.length-1];
+
+  const preview = document.getElementById('step-preview');
+  preview.style.display = '';
+
+  document.getElementById('preview-content').innerHTML = `
+    <div class="alert alert-ok" style="margin-bottom:1rem">✅ Berhasil membaca <b>${rows.length.toLocaleString()}</b> transaksi dari file <b>${filename}</b>${skipped ? ` (${skipped} baris dilewati)` : ''}</div>
+
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-val" style="color:var(--green)">${income.length.toLocaleString()}</div><div class="stat-lbl">Pemasukan</div></div>
+      <div class="stat"><div class="stat-val" style="color:var(--red)">${expense.length.toLocaleString()}</div><div class="stat-lbl">Pengeluaran</div></div>
+      <div class="stat"><div class="stat-val" style="color:var(--blue)">${(transferIn.length).toLocaleString()}</div><div class="stat-lbl">Transfer</div></div>
+    </div>
+
+    <div style="font-size:12px;color:var(--text2);margin-bottom:1rem">📅 Periode: <b>${dateFrom}</b> s/d <b>${dateTo}</b></div>
+
+    <div class="section">
+      <div class="section-title">Dompet yang ditemukan (${walletSet.length})</div>
+      <div>${walletSet.map((w,i) => `<span class="wallet-chip"><span style="width:10px;height:10px;border-radius:50%;background:${WALLET_COLORS[i%WALLET_COLORS.length]};display:inline-block"></span>${w}</span>`).join('')}</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Sample transaksi (5 terakhir)</div>
+      <div style="overflow-x:auto"><table>
+        <thead><tr><th>Tanggal</th><th>Deskripsi</th><th>Dompet</th><th>Tipe</th><th style="text-align:right">Jumlah</th></tr></thead>
+        <tbody>${rows.slice(0,5).map(r=>`<tr>
+          <td>${r.date}</td>
+          <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.desc}</td>
+          <td>${r.wallet}</td>
+          <td><span style="font-size:10px;padding:2px 6px;border-radius:99px;background:${r.type==='income'?'var(--gl)':r.type==='expense'?'var(--rl2)':'var(--bl)'};color:${r.type==='income'?'var(--gt)':r.type==='expense'?'var(--rt)':'var(--blt)'}">${r.type==='income'?'Masuk':r.type==='expense'?'Keluar':'Transfer'}</span></td>
+          <td style="text-align:right;font-weight:600;color:${r.type==='income'?'var(--green)':r.type==='expense'?'var(--red)':'var(--blue)'}">${r.type==='income'?'+':'-'}${fmt(r.amount)}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>
+    </div>
+
+    <div class="alert alert-warn" style="margin-bottom:1rem">
+      ⚠️ <b>Catatan tentang Transfer:</b> Money Lover mencatat transfer sebagai 2 baris terpisah (Transfer keluar + Transfer masuk). 
+      Importer ini akan menggabungkannya menjadi 1 transaksi transfer di Dompetku secara otomatis.
+    </div>
+
+    <button class="btn btn-g btn-lg" onclick="showImportStep()">Lanjut → Mulai Import</button>
+  `;
+}
+
+// ════════════════════════════════
+// STEP 3: Import
+// ════════════════════════════════
+function showImportStep() {
+  document.getElementById('step-import').style.display = '';
+  document.getElementById('import-content').innerHTML = `
+    <div style="margin-bottom:1rem;font-size:13px;color:var(--text2)">
+      Proses import akan:<br>
+      1. Membuat dompet-dompet baru di Dompetku<br>
+      2. Menggabungkan pasangan transfer (keluar + masuk)<br>
+      3. Import semua transaksi ke Supabase<br>
+      4. Menghitung saldo akhir tiap dompet
+    </div>
+    <button class="btn btn-g btn-lg" onclick="startImport()" id="import-btn">🚀 Mulai Import ${parsedData.rows.length.toLocaleString()} Transaksi</button>
+    <div class="progress-bar" style="display:none" id="prog-wrap"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+    <div style="font-size:12px;color:var(--text2);margin:.5rem 0" id="prog-label"></div>
+    <div class="log" id="log" style="display:none"></div>
+  `;
+}
+
+function addLog(msg, cls='log-info') {
+  const log = document.getElementById('log');
+  if (!log) return;
+  log.style.display = '';
+  const span = document.createElement('span');
+  span.className = 'log-entry ' + cls;
+  span.textContent = msg;
+  log.appendChild(span);
+  log.scrollTop = log.scrollHeight;
+}
+
+function setProgress(pct, label) {
+  const fill = document.getElementById('prog-fill');
+  const wrap = document.getElementById('prog-wrap');
+  const lbl = document.getElementById('prog-label');
+  if (fill) { fill.style.width = pct + '%'; wrap.style.display = ''; }
+  if (lbl) lbl.textContent = label;
+}
+
+// Supabase helpers
+const supa = async (method, path, body) => {
+  const r = await fetch(SUPA_URL + '/rest/v1/' + path, {
+    method,
+    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json', 'Prefer': method==='POST'?'return=representation':'return=minimal' },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if (!r.ok) { const t = await r.text(); throw new Error(t); }
+  const t = await r.text(); return t ? JSON.parse(t) : null;
+};
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+async function startImport() {
+  document.getElementById('import-btn').disabled = true;
+  document.getElementById('import-btn').textContent = 'Sedang import...';
+
+  const { rows, walletSet } = parsedData;
+  let totalImported = 0, totalSkipped = 0, errors = 0;
+
+  try {
+    // ── STEP A: Cek existing wallets ──
+    addLog('Mengecek dompet yang sudah ada...', 'log-info');
+    const existingWallets = await supa('GET', 'wallets?order=created_at.asc');
+    const walletMap = {}; // name → id
+    (existingWallets || []).forEach(w => { walletMap[w.name] = w.id; });
+
+    // ── STEP B: Buat dompet baru ──
+    const newWallets = walletSet.filter(name => !walletMap[name]);
+    if (newWallets.length > 0) {
+      addLog(`Membuat ${newWallets.length} dompet baru...`, 'log-info');
+      for (let i = 0; i < newWallets.length; i++) {
+        const name = newWallets[i];
+        const id = 'w' + uid();
+        const color = WALLET_COLORS[i % WALLET_COLORS.length];
+        await supa('POST', 'wallets', { id, name, type: 'bank', color, balance: 0, hidden: false, parent_id: null, envelopes: [] });
+        walletMap[name] = id;
+        addLog(`  ✓ Dompet "${name}" dibuat`, 'log-ok');
+      }
+    } else {
+      addLog('Semua dompet sudah ada, melewati pembuatan dompet.', 'log-ok');
+    }
+
+    setProgress(10, 'Dompet siap...');
+
+    // ── STEP C: Proses transaksi ──
+    // Pisahkan transfer dari transaksi biasa
+    const transferOuts = rows.filter(r => r.type === 'transfer_out');
+    const transferIns = rows.filter(r => r.type === 'transfer_in');
+    const normalTx = rows.filter(r => r.type !== 'transfer_out' && r.type !== 'transfer_in');
+
+    addLog(`Total: ${normalTx.length} transaksi biasa, ${transferOuts.length} pasang transfer`, 'log-info');
+
+    // Match transfer pasangan (keluar + masuk berdasarkan tanggal + jumlah)
+    const matchedTransfers = [];
+    const usedIns = new Set();
+
+    for (const tout of transferOuts) {
+      // Cari pasangan transfer masuk dengan tanggal & jumlah yang sama
+      const match = transferIns.find((tin, idx) =>
+        !usedIns.has(idx) &&
+        tin.date === tout.date &&
+        Math.abs(tin.amount - tout.amount) < 1
+      );
+      if (match) {
+        const matchIdx = transferIns.indexOf(match);
+        usedIns.add(matchIdx);
+        matchedTransfers.push({ from: tout, to: match, paired: true });
+      } else {
+        // Tidak ada pasangan — catat sebagai expense biasa
+        matchedTransfers.push({ from: tout, to: null, paired: false });
+      }
+    }
+
+    // Transfer masuk yang tidak punya pasangan → income
+    const unmatchedIns = transferIns.filter((_, idx) => !usedIns.has(idx));
+
+    addLog(`Transfer: ${matchedTransfers.filter(t=>t.paired).length} pasang ditemukan, ${matchedTransfers.filter(t=>!t.paired).length} tidak berpasangan`, 'log-info');
+
+    // ── STEP D: Bangun semua transaksi ──
+    const allTxRemote = [];
+    const balanceChanges = {}; // walletId → delta
+
+    const addBal = (walletId, delta) => {
+      balanceChanges[walletId] = (balanceChanges[walletId] || 0) + delta;
+    };
+
+    // Transaksi biasa
+    for (const r of normalTx) {
+      const wid = walletMap[r.wallet];
+      if (!wid) { totalSkipped++; continue; }
+      const id = 't' + uid();
+      allTxRemote.push({ id, date: r.date, description: r.desc, type: r.type, amount: r.amount, cat: r.cat, wallet_id: wid, to_wallet_id: null });
+      addBal(wid, r.type === 'income' ? r.amount : -r.amount);
+      totalImported++;
+    }
+
+    // Transfer berpasangan
+    for (const t of matchedTransfers) {
+      if (t.paired) {
+        const fromWid = walletMap[t.from.wallet];
+        const toWid = walletMap[t.to.wallet];
+        if (!fromWid || !toWid) { totalSkipped++; continue; }
+        const id = 't' + uid();
+        const desc = t.from.desc || `Transfer ${t.from.wallet} → ${t.to.wallet}`;
+        allTxRemote.push({ id, date: t.from.date, description: desc, type: 'transfer', amount: t.from.amount, cat: 'other', wallet_id: fromWid, to_wallet_id: toWid });
+        addBal(fromWid, -t.from.amount);
+        addBal(toWid, t.to.amount);
+        totalImported++;
+      } else {
+        // Tidak berpasangan → expense
+        const wid = walletMap[t.from.wallet];
+        if (!wid) { totalSkipped++; continue; }
+        const id = 't' + uid();
+        allTxRemote.push({ id, date: t.from.date, description: t.from.desc || 'Transfer keluar', type: 'expense', amount: t.from.amount, cat: 'other', wallet_id: wid, to_wallet_id: null });
+        addBal(wid, -t.from.amount);
+        totalImported++;
+      }
+    }
+
+    // Transfer masuk tidak berpasangan → income
+    for (const r of unmatchedIns) {
+      const wid = walletMap[r.wallet];
+      if (!wid) { totalSkipped++; continue; }
+      const id = 't' + uid();
+      allTxRemote.push({ id, date: r.date, description: r.desc || 'Transfer masuk', type: 'income', amount: r.amount, cat: 'other', wallet_id: wid, to_wallet_id: null });
+      addBal(wid, r.amount);
+      totalImported++;
+    }
+
+    setProgress(20, `Siap import ${allTxRemote.length.toLocaleString()} transaksi...`);
+
+    // ── STEP E: Batch insert transaksi ──
+    addLog(`Mengimport ${allTxRemote.length.toLocaleString()} transaksi ke database...`, 'log-info');
+    const BATCH = 100;
+    const total = allTxRemote.length;
+
+    for (let i = 0; i < allTxRemote.length; i += BATCH) {
+      const chunk = allTxRemote.slice(i, i + BATCH);
+      try {
+        await supa('POST', 'transactions', chunk);
+        const pct = 20 + Math.round((i / total) * 70);
+        setProgress(pct, `Import ${Math.min(i+BATCH, total).toLocaleString()} / ${total.toLocaleString()} transaksi...`);
+        if (i % 500 === 0 && i > 0) addLog(`  ✓ ${i.toLocaleString()} transaksi berhasil diimport`, 'log-ok');
+      } catch (e) {
+        errors++;
+        addLog(`  ✗ Error batch ${i}-${i+BATCH}: ${e.message.slice(0,80)}`, 'log-err');
+      }
+      await sleep(50); // rate limit buffer
+    }
+
+    setProgress(90, 'Update saldo dompet...');
+
+    // ── STEP F: Update saldo dompet ──
+    addLog('Menghitung dan update saldo tiap dompet...', 'log-info');
+    const walletPatches = Object.entries(balanceChanges);
+    for (const [wid, delta] of walletPatches) {
+      const existing = (existingWallets || []).find(w => w.id === wid);
+      const currentBal = existing?.balance || 0;
+      const newBal = Math.round((currentBal + delta) * 100) / 100;
+      await supa('PATCH', `wallets?id=eq.${wid}`, { balance: newBal });
+    }
+
+    setProgress(100, 'Selesai!');
+    addLog(`\n✅ Import selesai! ${totalImported.toLocaleString()} transaksi berhasil, ${totalSkipped} dilewati, ${errors} error.`, 'log-ok');
+
+    showDone(totalImported, totalSkipped, errors, walletSet.length, newWallets.length);
+
+  } catch(e) {
+    addLog('❌ ERROR: ' + e.message, 'log-err');
+    document.getElementById('import-btn').disabled = false;
+    document.getElementById('import-btn').textContent = 'Coba Lagi';
+  }
+}
+
+function showDone(imported, skipped, errors, totalWallets, newWallets) {
+  document.getElementById('step-done').style.display = '';
+  document.getElementById('done-content').innerHTML = `
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-val" style="color:var(--green)">${imported.toLocaleString()}</div><div class="stat-lbl">Transaksi diimport</div></div>
+      <div class="stat"><div class="stat-val" style="color:var(--blue)">${totalWallets}</div><div class="stat-lbl">Dompet</div></div>
+      <div class="stat"><div class="stat-val" style="color:${errors>0?'var(--red)':'var(--green)'}">${errors}</div><div class="stat-lbl">Error</div></div>
+    </div>
+    ${skipped > 0 ? `<div class="alert alert-warn" style="margin:.75rem 0">${skipped} baris dilewati (data tidak lengkap atau format tidak dikenali)</div>` : ''}
+    ${errors > 0 ? `<div class="alert alert-err" style="margin:.75rem 0">Ada ${errors} error saat import. Beberapa transaksi mungkin tidak tersimpan. Cek log di atas untuk detail.</div>` : ''}
+    <div class="alert alert-ok" style="margin:.75rem 0">
+      🎉 Data kamu sudah ada di Dompetku! Buka <b>dompetku</b> untuk melihat semua transaksi, saldo, dan laporan keuangan kamu dari 2017 sampai sekarang.
+    </div>
+    <a href="index.html" style="display:block">
+      <button class="btn btn-g btn-lg">Buka Dompetku →</button>
+    </a>
+  `;
+  document.getElementById('step-done').scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
