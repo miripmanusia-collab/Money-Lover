@@ -264,7 +264,7 @@ input[type=file]{display:none}
     <button class="ptab active" id="tt-expense" onclick="setTxType('expense')">Pengeluaran</button>
     <button class="ptab" id="tt-transfer" onclick="setTxType('transfer')">Transfer</button>
   </div>
-  <div class="form-row"><input type="number" id="tx-amt" placeholder="0" style="font-size:26px;font-weight:700;border:none;background:transparent;text-align:center;flex:1;padding:.25rem 0" inputmode="decimal"></div>
+  <div class="form-row"><input type="text" id="tx-amt" placeholder="0" style="font-size:26px;font-weight:700;border:none;background:transparent;text-align:center;flex:1;padding:.25rem 0" inputmode="numeric"></div>
   <div class="form-row"><input type="date" id="tx-date"><select id="tx-wid"></select></div>
   <div id="tx-towid-row" class="form-row" style="display:none"><select id="tx-towid" style="flex:1"></select></div>
   <div class="form-row"><input type="text" id="tx-desc" placeholder="Keterangan (opsional)"></div>
@@ -282,7 +282,7 @@ input[type=file]{display:none}
   <div class="form-row">
     <select id="w-type"><option value="cash">Tunai</option><option value="bank">Bank</option><option value="ewallet">E-wallet</option><option value="savings">Tabungan</option><option value="investment">Investasi</option></select>
   </div>
-  <div id="w-bal-row" class="form-row"><input type="number" id="w-bal" placeholder="Saldo dompet" min="0"></div>
+  <div id="w-bal-row" class="form-row"><input type="text" id="w-bal" placeholder="Saldo dompet" inputmode="numeric"></div>
   <div class="hint" id="w-bal-hint">Saat edit dompet, perubahan saldo otomatis dicatat sebagai transaksi penyesuaian.</div>
   <div class="form-row" style="align-items:center"><span class="flbl" style="margin:0 6px 0 0">Warna:</span><div class="cpick" id="cpick"></div></div>
   <div class="sep"></div>
@@ -297,7 +297,7 @@ input[type=file]{display:none}
   <div class="modal-title" id="mbudget-title">Tambah Anggaran</div>
   <input type="hidden" id="bgt-id">
   <div class="form-row"><select id="bgt-cat" style="flex:1"></select></div>
-  <div class="form-row"><input type="number" id="bgt-limit" placeholder="Batas anggaran (Rp)" min="0"></div>
+  <div class="form-row"><input type="text" id="bgt-limit" placeholder="Batas anggaran (Rp)" inputmode="numeric"></div>
   <div class="form-row"><select id="bgt-period"><option value="monthly">Bulanan</option><option value="weekly">Mingguan</option></select></div>
   <div class="modal-foot"><button class="btn" onclick="closeM('mbudget')">Batal</button><button class="btn btn-g" id="mbudget-save-btn" onclick="saveBudget()">Simpan</button></div>
 </div></div>
@@ -308,7 +308,7 @@ input[type=file]{display:none}
   <div class="modal-title" id="mbill-title">Tambah Tagihan Berulang</div>
   <input type="hidden" id="bill-id">
   <div class="form-row"><input type="text" id="bill-name" placeholder="Nama tagihan (misal: Listrik)"></div>
-  <div class="form-row"><input type="number" id="bill-amt" placeholder="Jumlah (Rp)" min="0"></div>
+  <div class="form-row"><input type="text" id="bill-amt" placeholder="Jumlah (Rp)" inputmode="numeric"></div>
   <div class="form-row"><select id="bill-wid"></select><select id="bill-freq"><option value="monthly">Bulanan</option><option value="weekly">Mingguan</option><option value="yearly">Tahunan</option></select></div>
   <div class="form-row"><input type="number" id="bill-day" placeholder="Tanggal jatuh tempo (1-31)" min="1" max="31"><input type="text" id="bill-cat" placeholder="Kategori"></div>
   <div class="toggle-row"><label class="toggle"><input type="checkbox" id="bill-auto" checked><span class="tsl"></span></label><span style="font-size:13px;color:var(--text2)">Catat otomatis saat jatuh tempo</span></div>
@@ -322,7 +322,7 @@ input[type=file]{display:none}
   <input type="hidden" id="debt-id">
   <input type="hidden" id="debt-mode">
   <div class="form-row"><input type="text" id="debt-person" placeholder="Nama orang"></div>
-  <div class="form-row"><input type="number" id="debt-amt" placeholder="Jumlah (Rp)" min="0"></div>
+  <div class="form-row"><input type="text" id="debt-amt" placeholder="Jumlah (Rp)" inputmode="numeric"></div>
   <div class="form-row"><input type="date" id="debt-date"><input type="date" id="debt-due"></div>
   <div style="font-size:11px;color:var(--text3);margin-bottom:.5rem">Tanggal mulai · Jatuh tempo</div>
   <div class="form-row"><input type="text" id="debt-note" placeholder="Catatan (opsional)"></div>
@@ -344,7 +344,7 @@ input[type=file]{display:none}
     <button class="ptab" id="ett-transfer" onclick="setEditTxType('transfer')">Transfer</button>
   </div>
   <div class="form-row">
-    <input type="number" id="etx-amt" placeholder="Jumlah" inputmode="decimal" style="font-size:20px;font-weight:700;text-align:center;flex:1">
+    <input type="text" id="etx-amt" placeholder="Jumlah" inputmode="numeric" style="font-size:20px;font-weight:700;text-align:center;flex:1">
   </div>
   <div class="form-row">
     <input type="date" id="etx-date" style="flex:1">
@@ -398,8 +398,10 @@ const CATS=[
   {id:'other',l:'Lainnya',i:'📦'},
 ];
 const uid=()=>Math.random().toString(36).slice(2,10);
-const fmt=n=>'Rp '+Math.round(Math.abs(n)).toLocaleString('id-ID');
-const fmtK=n=>n>=1e9?(n/1e9).toFixed(1)+'M':n>=1e6?(n/1e6).toFixed(1)+'jt':n>=1e3?Math.round(n/1e3)+'rb':String(Math.round(n));
+const fmtNum=n=>Math.round(Math.abs(Number(n)||0)).toLocaleString('id-ID');
+const fmt=n=>'Rp '+fmtNum(n);
+const fmtK=n=>fmtNum(n);
+const parseNum=v=>{const s=String(v??'').replace(/[^\d-]/g,'');return s&&s!=='-'?Number(s):0;};
 const todayStr=()=>new Date().toISOString().slice(0,10);
 const thisMonth=()=>new Date().toISOString().slice(0,7);
 const inits=n=>n.trim().split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase();
@@ -432,6 +434,16 @@ function setSS(s,msg){
   if(d)d.className='sdot '+s;
   if(l)l.textContent=msg||{ok:'Tersinkron',err:'Gagal sinkron',sync:'Menyinkron...'}[s]||'';
 }
+
+function bindMoneyInput(id){
+  const el=document.getElementById(id);if(!el||el.dataset.moneyBound)return;
+  el.dataset.moneyBound='1';
+  el.addEventListener('input',()=>{
+    const digits=String(el.value).replace(/\D/g,'');
+    el.value=digits?Number(digits).toLocaleString('id-ID'):'';
+  });
+}
+function bindMoneyInputs(){['w-bal','tx-amt','bgt-limit','bill-amt','debt-amt','etx-amt'].forEach(bindMoneyInput);}
 
 async function loadAll(){
   setSS('sync');
@@ -484,6 +496,7 @@ function renderAll(){
   renderStrip();renderMetrics();renderHome();renderTxPage();
   renderBudgetPage();renderBills();renderDebts();renderWalletFull();
   fillWSelects();fillCatSel();
+  bindMoneyInputs();
 }
 
 function txsForWallet(id){
@@ -694,14 +707,14 @@ function openEditBudget(id){
   fillCatSel();
   document.getElementById('bgt-id').value=b.id;
   document.getElementById('bgt-cat').value=b.cat;
-  document.getElementById('bgt-limit').value=b.limit;
+  document.getElementById('bgt-limit').value=fmtNum(b.limit);
   document.getElementById('bgt-period').value=b.period||'monthly';
   document.getElementById('mbudget-title').textContent='Edit Anggaran';
   document.getElementById('mbudget-save-btn').textContent='Update';
   openM('mbudget');
   document.getElementById('bgt-id').value=b.id;
   document.getElementById('bgt-cat').value=b.cat;
-  document.getElementById('bgt-limit').value=b.limit;
+  document.getElementById('bgt-limit').value=fmtNum(b.limit);
   document.getElementById('bgt-period').value=b.period||'monthly';
   document.getElementById('mbudget-title').textContent='Edit Anggaran';
   document.getElementById('mbudget-save-btn').textContent='Update';
@@ -710,7 +723,7 @@ function openEditBudget(id){
 async function saveBudget(){
   const editId=document.getElementById('bgt-id').value;
   const cat=document.getElementById('bgt-cat').value;
-  const limit=parseFloat(document.getElementById('bgt-limit').value);
+  const limit=parseNum(document.getElementById('bgt-limit').value);
   const period=document.getElementById('bgt-period').value;
   if(!cat||!limit){alert2('Lengkapi semua field','err');return;}
   const clash=budgets.find(b=>b.cat===cat&&b.id!==editId);
@@ -765,7 +778,7 @@ function openEditBill(id){
   openM('mbill');
   document.getElementById('bill-id').value=b.id;
   document.getElementById('bill-name').value=b.name;
-  document.getElementById('bill-amt').value=b.amount;
+  document.getElementById('bill-amt').value=fmtNum(b.amount);
   document.getElementById('bill-wid').value=b.walletId||'';
   document.getElementById('bill-freq').value=b.freq||'monthly';
   document.getElementById('bill-day').value=b.day||1;
@@ -778,7 +791,7 @@ function openEditBill(id){
 async function saveBill(){
   const editId=document.getElementById('bill-id').value;
   const name=document.getElementById('bill-name').value.trim();
-  const amt=parseFloat(document.getElementById('bill-amt').value);
+  const amt=parseNum(document.getElementById('bill-amt').value);
   const wid=document.getElementById('bill-wid').value;
   const freq=document.getElementById('bill-freq').value;
   const day=parseInt(document.getElementById('bill-day').value)||1;
@@ -866,7 +879,7 @@ function openEditDebt(id){
   document.getElementById('debt-id').value=d.id;
   document.getElementById('debt-mode').value=d.mode;
   document.getElementById('debt-person').value=d.person;
-  document.getElementById('debt-amt').value=d.amount;
+  document.getElementById('debt-amt').value=fmtNum(d.amount);
   document.getElementById('debt-date').value=d.date||todayStr();
   document.getElementById('debt-due').value=d.due||'';
   document.getElementById('debt-note').value=d.note||'';
@@ -880,7 +893,7 @@ async function saveDebt(){
   const editId=document.getElementById('debt-id').value;
   const mode=document.getElementById('debt-mode').value;
   const person=document.getElementById('debt-person').value.trim();
-  const amt=parseFloat(document.getElementById('debt-amt').value);
+  const amt=parseNum(document.getElementById('debt-amt').value);
   const date=document.getElementById('debt-date').value;
   const due=document.getElementById('debt-due').value;
   const note=document.getElementById('debt-note').value.trim();
@@ -998,7 +1011,7 @@ function openEditWallet(id){
   document.getElementById('w-pid').value=w.parentId||'';
   document.getElementById('w-name').value=w.name;
   document.getElementById('w-type').value=w.type;
-  document.getElementById('w-bal').value=w.balance;
+  document.getElementById('w-bal').value=fmtNum(w.balance);
   document.getElementById('w-bal-row').style.display='';
   document.getElementById('w-bal-hint').textContent='Jika saldo diubah, sistem akan membuat transaksi penyesuaian otomatis agar histori tetap sinkron.';
   document.getElementById('w-hid').checked=w.hidden;
@@ -1033,7 +1046,7 @@ async function saveWallet(){
   const pid=document.getElementById('w-pid').value||null;
   const editId=document.getElementById('w-id').value;
   const balInput=document.getElementById('w-bal').value;
-  const bal=balInput===''?0:parseFloat(balInput);
+  const bal=balInput===''?0:parseNum(balInput);
   if(Number.isNaN(bal)||bal<0){alert2('Saldo dompet tidak valid','err');return;}
 
   setSS('sync');
@@ -1137,7 +1150,7 @@ function renderCatGrid(){
 function selCat(id){selTxCat=id;document.getElementById('tx-cat').value=id;renderCatGrid();}
 
 async function saveTx(){
-  const amt=parseFloat(document.getElementById('tx-amt').value);
+  const amt=parseNum(document.getElementById('tx-amt').value);
   const date=document.getElementById('tx-date').value;
   const wid=document.getElementById('tx-wid').value;
   const desc=document.getElementById('tx-desc').value.trim();
@@ -1177,7 +1190,7 @@ function openEditTx(id){
   document.getElementById('etx-old-wid').value=t.walletId||'';
   document.getElementById('etx-old-towid').value=t.toWalletId||'';
   // Fill form
-  document.getElementById('etx-amt').value=t.amount;
+  document.getElementById('etx-amt').value=fmtNum(t.amount);
   document.getElementById('etx-date').value=t.date;
   document.getElementById('etx-desc').value=t.desc||'';
   document.getElementById('etx-cat').value=t.cat||'other';
@@ -1221,11 +1234,11 @@ function selEditCat(id){selEditTxCat=id;document.getElementById('etx-cat').value
 async function saveEditTx(){
   const id=document.getElementById('etx-id').value;
   const oldType=document.getElementById('etx-old-type').value;
-  const oldAmt=parseFloat(document.getElementById('etx-old-amt').value);
+  const oldAmt=parseNum(document.getElementById('etx-old-amt').value);
   const oldWid=document.getElementById('etx-old-wid').value;
   const oldTowid=document.getElementById('etx-old-towid').value;
 
-  const newAmt=parseFloat(document.getElementById('etx-amt').value);
+  const newAmt=parseNum(document.getElementById('etx-amt').value);
   const newDate=document.getElementById('etx-date').value;
   const newWid=document.getElementById('etx-wid').value;
   const newDesc=document.getElementById('etx-desc').value.trim();
