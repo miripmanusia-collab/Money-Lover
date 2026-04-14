@@ -281,7 +281,8 @@ input[type=file]{display:none}
   <div class="form-row">
     <select id="w-type"><option value="cash">Tunai</option><option value="bank">Bank</option><option value="ewallet">E-wallet</option><option value="savings">Tabungan</option><option value="investment">Investasi</option></select>
   </div>
-  <div id="w-bal-row" class="form-row"><input type="number" id="w-bal" placeholder="Saldo awal (hanya untuk dompet baru)" min="0"></div>
+  <div id="w-bal-row" class="form-row"><input type="number" id="w-bal" placeholder="Saldo dompet" min="0"></div>
+  <div class="hint" id="w-bal-hint">Saat edit dompet, perubahan saldo otomatis dicatat sebagai transaksi penyesuaian.</div>
   <div class="form-row" style="align-items:center"><span class="flbl" style="margin:0 6px 0 0">Warna:</span><div class="cpick" id="cpick"></div></div>
   <div class="sep"></div>
   <div class="toggle-row"><label class="toggle"><input type="checkbox" id="w-hid"><span class="tsl"></span></label><span style="font-size:13px;color:var(--text2)">Sembunyikan dari total saldo</span></div>
@@ -845,6 +846,7 @@ function openM(id){
     document.getElementById('w-bal').value='';
     document.getElementById('w-hid').checked=false;
     document.getElementById('w-bal-row').style.display='';
+    document.getElementById('w-bal-hint').textContent='Isi saldo awal untuk dompet baru.';
     document.getElementById('mw-title').textContent='Tambah Dompet';
     document.getElementById('mw-save-btn').textContent='Simpan';
     buildCP();
@@ -860,8 +862,9 @@ function openEditWallet(id){
   document.getElementById('w-pid').value=w.parentId||'';
   document.getElementById('w-name').value=w.name;
   document.getElementById('w-type').value=w.type;
-  document.getElementById('w-bal').value='';
-  document.getElementById('w-bal-row').style.display='none'; // hide saldo awal saat edit
+  document.getElementById('w-bal').value=w.balance;
+  document.getElementById('w-bal-row').style.display='';
+  document.getElementById('w-bal-hint').textContent='Jika saldo diubah, sistem akan membuat transaksi penyesuaian otomatis agar histori tetap sinkron.';
   document.getElementById('w-hid').checked=w.hidden;
   document.getElementById('mw-title').textContent='Edit Dompet';
   document.getElementById('mw-save-btn').textContent='Update';
@@ -887,18 +890,53 @@ async function saveWallet(){
   const hidden=document.getElementById('w-hid').checked;
   const pid=document.getElementById('w-pid').value||null;
   const editId=document.getElementById('w-id').value;
+  const balInput=document.getElementById('w-bal').value;
+  const bal=balInput===''?0:parseFloat(balInput);
+  if(Number.isNaN(bal)||bal<0){alert2('Saldo dompet tidak valid','err');return;}
 
   setSS('sync');
   try{
     if(editId){
       // ── EDIT MODE ──
-      await dbU(`wallets?id=eq.${editId}`,{name,type,color:selColor,hidden,parent_id:pid});
       const w=wById(editId);
-      if(w){w.name=name;w.type=type;w.color=selColor;w.hidden=hidden;w.parentId=pid;}
-      closeM('mwallet');setSS('ok');renderAll();alert2('Dompet berhasil diupdate','ok');
+      const prevBal=w?Number(w.balance)||0:0;
+      const diff=+(bal-prevBal).toFixed(2);
+      const patches=[dbU(`wallets?id=eq.${editId}`,{name,type,color:selColor,hidden,parent_id:pid,balance:bal})];
+      let adjLocal=null;
+      if(diff!==0){
+        const adjType=diff>0?'income':'expense';
+        const adjAmt=Math.abs(diff);
+        const adjId='t'+uid();
+        const adjDesc=`Penyesuaian saldo dompet: ${name}`;
+        const adjDate=todayStr();
+        patches.push(dbP('transactions',{
+          id:adjId,
+          date:adjDate,
+          description:adjDesc,
+          type:adjType,
+          amount:adjAmt,
+          cat:'other',
+          wallet_id:editId,
+          to_wallet_id:null
+        }));
+        adjLocal={
+          id:adjId,
+          date:adjDate,
+          desc:adjDesc,
+          type:adjType,
+          amount:adjAmt,
+          cat:'other',
+          walletId:editId,
+          toWalletId:null
+        };
+      }
+      await Promise.all(patches);
+      if(w){w.name=name;w.type=type;w.color=selColor;w.hidden=hidden;w.parentId=pid;w.balance=bal;}
+      if(adjLocal)transactions.unshift(adjLocal);
+      closeM('mwallet');setSS('ok');renderAll();
+      alert2(diff!==0?'Dompet diupdate dan penyesuaian saldo dicatat sebagai transaksi':'Dompet berhasil diupdate','ok');
     } else {
       // ── ADD MODE ──
-      const bal=parseFloat(document.getElementById('w-bal').value)||0;
       const id='w'+uid();
       await dbP('wallets',{id,name,type,color:selColor,balance:bal,hidden,parent_id:pid,envelopes:[]});
       wallets.push({id,name,type,color:selColor,balance:bal,hidden,parentId:pid,envelopes:[]});
