@@ -6,6 +6,7 @@
 <title>Dompetku</title>
 <style>
 :root{
+  color-scheme:light dark;
   --bg:#fff;--bg2:#f7f7f6;--bg3:#f0ede8;
   --text:#111;--text2:#6b7280;--text3:#aaa;
   --bd:rgba(0,0,0,0.08);--bd2:rgba(0,0,0,0.15);
@@ -17,6 +18,7 @@
   --gray:#888780;--grl:#F1EFE8;--grt:#444441;
 }
 @media(prefers-color-scheme:dark){:root{
+  color-scheme:light dark;
   --bg:#1c1c1e;--bg2:#2c2c2e;--bg3:#3a3a3c;
   --text:#f2f2f7;--text2:#aeaeb2;--text3:#636366;
   --bd:rgba(255,255,255,0.08);--bd2:rgba(255,255,255,0.16);
@@ -25,7 +27,7 @@
   --grl:#2c2c2e;--grt:#B4B2A9;
 }}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg3);color:var(--text);min-height:100vh;font-size:14px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:radial-gradient(circle at top, color-mix(in srgb, var(--bg2) 65%, transparent), transparent 42%), var(--bg3);color:var(--text);min-height:100vh;font-size:14px}
 button{font-family:inherit;cursor:pointer}
 .app{display:flex;flex-direction:column;min-height:100vh;max-width:520px;margin:0 auto;background:var(--bg)}
 @media(min-width:768px){.app{max-width:100%;flex-direction:row}}
@@ -36,7 +38,7 @@ button{font-family:inherit;cursor:pointer}
 .nav-item{display:flex;align-items:center;gap:10px;padding:10px 1.25rem;font-size:13px;color:var(--text2);border:none;background:transparent;width:100%;text-align:left;cursor:pointer;transition:background .15s,color .15s}
 .nav-item:hover{background:var(--bg3);color:var(--text)}
 .nav-item.active{color:var(--green);background:var(--gl);font-weight:500}
-.nav-icon{font-size:16px;width:20px;text-align:center}
+.nav-icon{font-size:15px;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;text-align:center;background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.04));box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 6px 14px rgba(0,0,0,.18);border:.5px solid var(--bd)}
 .sync-info{display:flex;align-items:center;gap:8px;padding:10px 1.25rem;font-size:12px;color:var(--text3)}
 .sdot{width:8px;height:8px;border-radius:50%;background:var(--gray);flex-shrink:0}
 .sdot.ok{background:var(--green)}.sdot.err{background:var(--red)}.sdot.sync{background:var(--amber);animation:blink 1s infinite}
@@ -46,6 +48,7 @@ button{font-family:inherit;cursor:pointer}
 @media(min-width:768px){.topbar{display:none}}
 .topbar-logo{font-size:18px;font-weight:700;letter-spacing:-.5px}
 .topbar-logo span{color:var(--green)}
+.topbar-actions{display:flex;align-items:center;gap:.5rem}
 .page{display:none;flex:1;overflow-y:auto;padding:1rem}
 .page.active{display:block}
 @media(min-width:768px){.page{padding:1.5rem 2rem}}
@@ -53,7 +56,7 @@ button{font-family:inherit;cursor:pointer}
 @media(min-width:768px){.bottomnav{display:none}}
 .bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:.25rem;border:none;background:transparent;color:var(--text3);font-size:10px;font-weight:500}
 .bnav-item.active{color:var(--green)}
-.bnav-icon{font-size:22px;line-height:1.2}
+.bnav-icon{font-size:18px;line-height:1.2;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.04));box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 6px 14px rgba(0,0,0,.16);border:.5px solid var(--bd)}
 .card{background:var(--bg);border:.5px solid var(--bd);border-radius:var(--rl);padding:.875rem 1rem;margin-bottom:.75rem}
 .card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}
 .card-title{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em}
@@ -90,10 +93,19 @@ button{font-family:inherit;cursor:pointer}
 .inspect-stat{background:var(--bg2);border-radius:var(--r);padding:.75rem}
 .inspect-stat-lbl{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
 .inspect-stat-val{font-size:17px;font-weight:700}
-#inspect-tx,#recent-tx,#tx-list{max-height:420px;overflow:auto;scrollbar-width:thin}
+#inspect-tx,#recent-tx,#tx-list{overflow:auto;scrollbar-width:thin}
+#inspect-tx{max-height:520px}
+#recent-tx{max-height:520px}
+#tx-list{max-height:68vh}
 #inspect-tx::-webkit-scrollbar,#recent-tx::-webkit-scrollbar,#tx-list::-webkit-scrollbar{width:8px;height:8px}
 #inspect-tx::-webkit-scrollbar-thumb,#recent-tx::-webkit-scrollbar-thumb,#tx-list::-webkit-scrollbar-thumb{background:#2a2f3b;border-radius:999px}
-@media(max-width:768px){#inspect-tx,#recent-tx,#tx-list{max-height:320px}}
+.tx-topbar{display:flex;flex-direction:column;gap:.75rem;margin-bottom:.75rem}
+.tx-filters{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:.5rem}
+.search-input{font-size:12px;padding:9px 10px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--bg);color:var(--text);width:100%}
+.search-input::placeholder{color:var(--text3)}
+.inspect-search-wrap{min-width:240px;flex:1}
+.tx-card{padding:.75rem 1rem}
+@media(max-width:768px){#inspect-tx,#recent-tx,#tx-list{max-height:320px}.tx-filters{grid-template-columns:1fr}.inspect-search-wrap{min-width:100%}}
 @media(min-width:992px){.inspect-stats{grid-template-columns:repeat(6,minmax(0,1fr));}}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{text-align:left;font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;padding:6px 0;border-bottom:.5px solid var(--bd)}
@@ -185,18 +197,21 @@ input[type=file]{display:none}
   <div class="main">
     <div class="topbar">
       <div class="topbar-logo">Dompet<span>ku</span></div>
-      <button class="btn btn-sm btn-g" onclick="openM('mtx')">+ Catat</button>
+      <div class="topbar-actions">
+        <button class="btn btn-sm" onclick="openSearchQuick()">🔎 Cari</button>
+        <button class="btn btn-sm btn-g" onclick="openM('mtx')">+ Catat</button>
+      </div>
     </div>
     <div id="alertbox" class="alert-bar" style="margin:.5rem 1rem 0"></div>
     <!-- Pages -->
     <div id="page-home" class="page active">
-      <div class="w-strip" id="wstrip"></div>
       <div class="metrics">
         <div class="metric"><div class="metric-lbl">Total Saldo</div><div class="metric-val" id="m-bal" style="color:var(--blue)">—</div></div>
         <div class="metric"><div class="metric-lbl">Bulan Ini</div><div class="metric-val" id="m-net">—</div></div>
         <div class="metric"><div class="metric-lbl">Pemasukan</div><div class="metric-val" id="m-in" style="color:var(--green)">—</div></div>
         <div class="metric"><div class="metric-lbl">Pengeluaran</div><div class="metric-val" id="m-out" style="color:var(--red)">—</div></div>
       </div>
+      <div class="w-strip" id="wstrip"></div>
       <div id="budget-alerts"></div>
       <div class="card inspect-card" id="inspect-card" style="display:none">
         <div class="card-hdr inspect-head">
@@ -205,6 +220,7 @@ input[type=file]{display:none}
             <div class="inspect-sub">Semua transaksi yang terkait dompet ini langsung kelihatan di bawah.</div>
           </div>
           <div class="inspect-actions">
+            <div class="inspect-search-wrap"><input id="inspect-search" class="search-input" type="text" placeholder="Cari transaksi dompet ini..." oninput="renderInspect()"></div>
             <button class="btn btn-sm" onclick="gotoPage('tx')">Semua Transaksi</button>
             <button class="btn btn-sm" onclick="openEditSelectedWallet()">Edit Dompet</button>
             <button class="btn btn-sm" onclick="selW('all')">Reset</button>
@@ -214,7 +230,13 @@ input[type=file]{display:none}
         <div id="inspect-tx"></div>
       </div>
       <div class="card" id="recent-card">
-        <div class="card-hdr"><div class="card-title">Transaksi Terakhir</div><button class="btn btn-sm" onclick="gotoPage('tx')">Semua</button></div>
+        <div class="card-hdr" style="gap:.75rem;flex-wrap:wrap">
+          <div class="card-title">Transaksi Terakhir</div>
+          <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-left:auto;width:min(100%,520px)">
+            <input id="home-search" class="search-input" type="text" placeholder="Cari transaksi di dashboard..." oninput="renderHome()" style="flex:1;min-width:220px">
+            <button class="btn btn-sm" onclick="gotoPage('tx')">Semua</button>
+          </div>
+        </div>
         <div id="recent-tx"></div>
       </div>
       <div class="card" id="bill-upcoming-card">
@@ -223,19 +245,22 @@ input[type=file]{display:none}
       </div>
     </div>
     <div id="page-tx" class="page">
-      <div class="ptabs">
-        <button class="ptab active" onclick="setPeriod('week',this)">Minggu</button>
-        <button class="ptab" onclick="setPeriod('month',this)">Bulan</button>
-        <button class="ptab" onclick="setPeriod('year',this)">Tahun</button>
-        <button class="ptab" onclick="setPeriod('all',this)">Semua</button>
+      <div class="tx-topbar">
+        <div class="ptabs">
+          <button class="ptab active" onclick="setPeriod('all',this)">Semua</button>
+          <button class="ptab" onclick="setPeriod('week',this)">Minggu</button>
+          <button class="ptab" onclick="setPeriod('month',this)">Bulan</button>
+          <button class="ptab" onclick="setPeriod('year',this)">Tahun</button>
+        </div>
+        <div class="tx-filters">
+          <input id="tx-search" class="search-input" type="text" placeholder="Cari transaksi, angka, dompet, kategori..." oninput="renderTxPage()">
+          <select id="f-wallet" onchange="renderTxPage()" style="font-size:12px;padding:9px 10px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--bg);color:var(--text);width:100%"></select>
+          <select id="f-type" onchange="renderTxPage()" style="font-size:12px;padding:9px 10px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--bg);color:var(--text);width:100%">
+            <option value="">Semua jenis</option><option value="income">Pemasukan</option><option value="expense">Pengeluaran</option><option value="transfer">Transfer</option>
+          </select>
+        </div>
       </div>
-      <div style="display:flex;gap:.5rem;margin-bottom:.75rem">
-        <select id="f-wallet" onchange="renderTxPage()" style="font-size:12px;padding:6px 8px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--bg);color:var(--text);flex:1"></select>
-        <select id="f-type" onchange="renderTxPage()" style="font-size:12px;padding:6px 8px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--bg);color:var(--text);flex:1">
-          <option value="">Semua</option><option value="income">Pemasukan</option><option value="expense">Pengeluaran</option><option value="transfer">Transfer</option>
-        </select>
-      </div>
-      <div class="card" style="padding:.75rem 1rem"><div id="tx-list"></div></div>
+      <div class="card tx-card"><div id="tx-list"></div></div>
     </div>
     <div id="page-budget" class="page">
       <div class="sec-hdr">
@@ -582,6 +607,29 @@ function walletScopedTransactions(id){
   return transactions.filter(t=>t.walletId===id||t.toWalletId===id).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
 }
 
+function txSearchBlob(t){
+  const from=wById(t.walletId)?.name||'';
+  const to=wById(t.toWalletId)?.name||'';
+  const parts=[
+    t.desc||'',
+    catLabel(t.cat),
+    t.date||'',
+    t.type||'',
+    from,
+    to,
+    String(t.amount||''),
+    fmtNum(t.amount||0),
+    fmtSigned(t.amount||0,{rp:true})
+  ];
+  return parts.join(' ').toLowerCase();
+}
+
+function txMatchesSearch(t,q){
+  const qq=(q||'').trim().toLowerCase();
+  if(!qq) return true;
+  return txSearchBlob(t).includes(qq);
+}
+
 function renderInspect(){
   const card=document.getElementById('inspect-card');
   const recentCard=document.getElementById('recent-card');
@@ -593,6 +641,8 @@ function renderInspect(){
   }
   const w=wById(selWallet);
   const rows=walletScopedTransactions(selWallet);
+  const inspectQuery=document.getElementById('inspect-search')?.value||'';
+  const visibleRows=rows.filter(t=>txMatchesSearch(t,inspectQuery));
   const income=rows.filter(t=>t.type==='income'&&t.walletId===selWallet).reduce((s,t)=>s+t.amount,0);
   const expense=rows.filter(t=>t.type==='expense'&&t.walletId===selWallet).reduce((s,t)=>s+t.amount,0);
   const transferIn=rows.filter(t=>t.type==='transfer'&&t.toWalletId===selWallet).reduce((s,t)=>s+t.amount,0);
@@ -605,7 +655,7 @@ function renderInspect(){
     <div class="inspect-stat"><div class="inspect-stat-lbl">Pengeluaran</div><div class="inspect-stat-val" style="color:var(--red)">${fmtSigned(expense,{rp:true})}</div></div>
     <div class="inspect-stat"><div class="inspect-stat-lbl">Transfer Masuk</div><div class="inspect-stat-val" style="color:var(--blue)">${fmtSigned(transferIn,{rp:true})}</div></div>
     <div class="inspect-stat"><div class="inspect-stat-lbl">Transfer Keluar</div><div class="inspect-stat-val">${fmtSigned(transferOut,{rp:true})}</div></div>`;
-  document.getElementById('inspect-tx').innerHTML=rows.length?txItemsHTML(rows):'<div class="empty">Belum ada transaksi untuk dompet ini</div>';
+  document.getElementById('inspect-tx').innerHTML=visibleRows.length?txItemsHTML(visibleRows):'<div class="empty">Tidak ada transaksi yang cocok</div>';
   card.style.display='block';
   recentCard.style.display='none';
 }
@@ -624,8 +674,10 @@ function renderHome(){
   renderInspect();
   // Recent tx
   const rtEl=document.getElementById('recent-tx');
-  const recent=transactions.slice(0,6);
-  rtEl.innerHTML=recent.length?txItemsHTML(recent):'<div class="empty">Belum ada transaksi</div>';
+  const homeQuery=document.getElementById('home-search')?.value||'';
+  const recentBase=transactions.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')||String(b.id).localeCompare(String(a.id)));
+  const recent=recentBase.filter(t=>txMatchesSearch(t,homeQuery)).slice(0,20);
+  rtEl.innerHTML=recent.length?txItemsHTML(recent):'<div class="empty">Tidak ada transaksi yang cocok</div>';
   // Budget alerts
   const mo=thisMonth(),alerts=[];
   budgets.forEach(b=>{
@@ -693,10 +745,19 @@ function filterByPeriod(txs,period){
 function renderTxPage(){
   const fwEl=document.getElementById('f-wallet');
   const tfEl=document.getElementById('f-type');
+  const qs=document.getElementById('tx-search')?.value||'';
   const wf=fwEl?.value||'all';
   const tf=tfEl?.value||'';
-  const rows=filterByPeriod(transactions,txPeriod).filter(t=>(wf==='all'||t.walletId===wf||t.toWalletId===wf)&&(!tf||t.type===tf));
+  const rows=filterByPeriod(transactions,txPeriod).filter(t=>(wf==='all'||t.walletId===wf||t.toWalletId===wf)&&(!tf||t.type===tf)&&txMatchesSearch(t,qs));
   document.getElementById('tx-list').innerHTML=rows.length?txItemsHTML(rows):'<div class="empty">Tidak ada transaksi</div>';
+}
+
+function openSearchQuick(){
+  gotoPage('tx');
+  txPeriod='all';
+  updateTxPeriodButtons();
+  renderTxPage();
+  setTimeout(()=>document.getElementById('tx-search')?.focus(),60);
 }
 
 function setPeriod(p,el){
