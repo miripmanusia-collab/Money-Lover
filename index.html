@@ -184,9 +184,10 @@ input[type=file]{display:none}
         <div class="metric"><div class="metric-lbl">Pemasukan</div><div class="metric-val" id="m-in" style="color:var(--green)">—</div></div>
         <div class="metric"><div class="metric-lbl">Pengeluaran</div><div class="metric-val" id="m-out" style="color:var(--red)">—</div></div>
       </div>
+      <div id="wallet-inspect"></div>
       <div id="budget-alerts"></div>
       <div class="card">
-        <div class="card-hdr"><div class="card-title">Transaksi Terakhir</div><button class="btn btn-sm" onclick="gotoPage('tx')">Semua</button></div>
+        <div class="card-hdr"><div class="card-title" id="recent-title">Transaksi Terakhir</div><button class="btn btn-sm" onclick="gotoPage('tx')">Semua</button></div>
         <div id="recent-tx"></div>
       </div>
       <div class="card" id="bill-upcoming-card">
@@ -485,17 +486,26 @@ function renderAll(){
   fillWSelects();fillCatSel();
 }
 
+function txsForWallet(id){
+  return transactions.filter(t=>t.walletId===id||t.toWalletId===id);
+}
+
 function renderMetrics(){
-  const vis=wallets.filter(w=>!w.hidden);
-  document.getElementById('m-bal').textContent=fmt(vis.reduce((s,w)=>s+w.balance,0));
   const mo=thisMonth();
-  const moTx=transactions.filter(t=>t.date&&t.date.startsWith(mo)&&!wallets.find(w=>w.id===t.walletId)?.hidden);
-  const inc=moTx.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
-  const exp=moTx.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const isAll=selWallet==='all';
+  const currentWallet=!isAll?wById(selWallet):null;
+  const vis=wallets.filter(w=>!w.hidden);
+  const balance=isAll?vis.reduce((s,w)=>s+w.balance,0):(currentWallet?.balance||0);
+  let moTx=isAll
+    ? transactions.filter(t=>t.date&&t.date.startsWith(mo)&&!wallets.find(w=>w.id===t.walletId)?.hidden)
+    : txsForWallet(selWallet).filter(t=>t.date&&t.date.startsWith(mo));
+  const inc=moTx.filter(t=>t.type==='income'&&(isAll||t.walletId===selWallet)).reduce((s,t)=>s+t.amount,0);
+  const exp=moTx.filter(t=>t.type==='expense'&&(isAll||t.walletId===selWallet)).reduce((s,t)=>s+t.amount,0);
+  document.getElementById('m-bal').textContent=fmt(balance);
   document.getElementById('m-in').textContent=fmt(inc);
   document.getElementById('m-out').textContent=fmt(exp);
   const net=inc-exp,nel=document.getElementById('m-net');
-  nel.textContent=(net>=0?'+':'-')+fmt(net);
+  nel.textContent=(net>=0?'+':'-')+fmt(Math.abs(net));
   nel.style.color=net>=0?'var(--green)':'var(--red)';
 }
 
@@ -528,17 +538,51 @@ function renderStrip(){
   el.innerHTML=html;
 }
 
-function selW(id){selWallet=id;renderStrip();renderTxPage();}
+function selW(id){selWallet=id;renderStrip();renderMetrics();renderHome();const fw=document.getElementById('f-wallet');if(fw)fw.value=id;renderTxPage();}
 
 // ════════════════════════════════════════
 // HOME
 // ════════════════════════════════════════
 function renderHome(){
   renderMetrics();
+  const inspectEl=document.getElementById('wallet-inspect');
+  const walletSelected=selWallet!=='all'?wById(selWallet):null;
+  const walletRows=walletSelected?txsForWallet(selWallet).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')||String(b.id).localeCompare(String(a.id))):[];
+  if(walletSelected){
+    const win=walletRows.filter(t=>t.type==='income'&&t.walletId===selWallet).reduce((s,t)=>s+t.amount,0);
+    const wout=walletRows.filter(t=>t.type==='expense'&&t.walletId===selWallet).reduce((s,t)=>s+t.amount,0);
+    const tin=walletRows.filter(t=>t.type==='transfer'&&t.toWalletId===selWallet).reduce((s,t)=>s+t.amount,0);
+    const tout=walletRows.filter(t=>t.type==='transfer'&&t.walletId===selWallet).reduce((s,t)=>s+t.amount,0);
+    inspectEl.innerHTML=`<div class="card" style="margin-bottom:.75rem">
+      <div class="card-hdr" style="align-items:flex-start;gap:.75rem;flex-wrap:wrap">
+        <div>
+          <div class="card-title">Inspect Dompet · ${walletSelected.name}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:4px">Semua transaksi yang terkait dompet ini langsung kelihatan di bawah.</div>
+        </div>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-left:auto">
+          <button class="btn btn-sm" onclick="openEditWallet('${walletSelected.id}')">Edit Dompet</button>
+          <button class="btn btn-sm" onclick="selW('all')">Reset</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.5rem;margin-bottom:.75rem">
+        <div class="metric"><div class="metric-lbl">Saldo Sekarang</div><div class="metric-val" style="color:${walletSelected.color}">${fmt(walletSelected.balance)}</div></div>
+        <div class="metric"><div class="metric-lbl">Jumlah Transaksi</div><div class="metric-val">${walletRows.length}</div></div>
+        <div class="metric"><div class="metric-lbl">Pemasukan</div><div class="metric-val" style="color:var(--green)">${fmt(win)}</div></div>
+        <div class="metric"><div class="metric-lbl">Pengeluaran</div><div class="metric-val" style="color:var(--red)">${fmt(wout)}</div></div>
+        <div class="metric"><div class="metric-lbl">Transfer Masuk</div><div class="metric-val" style="color:var(--blue)">${fmt(tin)}</div></div>
+        <div class="metric"><div class="metric-lbl">Transfer Keluar</div><div class="metric-val" style="color:var(--orange)">${fmt(tout)}</div></div>
+      </div>
+      <div style="max-height:320px;overflow:auto;border:.5px solid var(--bd2);border-radius:var(--r)">${walletRows.length?txItemsHTML(walletRows):'<div class="empty" style="padding:1rem">Belum ada transaksi di dompet ini</div>'}</div>
+    </div>`;
+  } else {
+    inspectEl.innerHTML='';
+  }
   // Recent tx
   const rtEl=document.getElementById('recent-tx');
-  const recent=transactions.slice(0,6);
+  const recent=(walletSelected?walletRows:transactions.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')||String(b.id).localeCompare(String(a.id)))).slice(0,6);
   rtEl.innerHTML=recent.length?txItemsHTML(recent):'<div class="empty">Belum ada transaksi</div>';
+  const recentTitle=document.getElementById('recent-title');
+  if(recentTitle)recentTitle.textContent=walletSelected?`Transaksi ${walletSelected.name}`:'Transaksi Terakhir';
   // Budget alerts
   const mo=thisMonth(),alerts=[];
   budgets.forEach(b=>{
@@ -548,7 +592,7 @@ function renderHome(){
   });
   document.getElementById('budget-alerts').innerHTML=alerts.join('');
   // Upcoming bills
-  const now=new Date(),upcoming=bills.filter(b=>{const due=new Date(now.getFullYear(),now.getMonth(),b.day);return(due-now)/864e5<7;}).slice(0,3);
+  const now=new Date(),upcoming=bills.filter(b=>{const due=new Date(now.getFullYear(),now.getMonth(),b.day);const matchWallet=!walletSelected||b.walletId===walletSelected.id;return matchWallet&&(due-now)/864e5<7;}).slice(0,3);
   const ubCard=document.getElementById('bill-upcoming-card');
   if(!upcoming.length){ubCard.style.display='none';return;}
   ubCard.style.display='';
