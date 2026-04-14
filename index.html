@@ -197,10 +197,10 @@ input[type=file]{display:none}
     </div>
     <div id="page-tx" class="page">
       <div class="ptabs">
-        <button class="ptab active" onclick="setPeriod('week',this)">Minggu</button>
+        <button class="ptab active" onclick="setPeriod('all',this)">Semua</button>
+        <button class="ptab" onclick="setPeriod('week',this)">Minggu</button>
         <button class="ptab" onclick="setPeriod('month',this)">Bulan</button>
         <button class="ptab" onclick="setPeriod('year',this)">Tahun</button>
-        <button class="ptab" onclick="setPeriod('all',this)">Semua</button>
       </div>
       <div style="display:flex;gap:.5rem;margin-bottom:.75rem">
         <select id="f-wallet" onchange="renderTxPage()" style="font-size:12px;padding:6px 8px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--bg);color:var(--text);flex:1"></select>
@@ -398,17 +398,18 @@ const CATS=[
   {id:'other',l:'Lainnya',i:'📦'},
 ];
 const uid=()=>Math.random().toString(36).slice(2,10);
-const fmtNum=n=>Math.round(Math.abs(Number(n)||0)).toLocaleString('id-ID');
+const fmtNum=n=>{const num=Number(n)||0;return (num<0?'-':'')+Math.round(Math.abs(num)).toLocaleString('id-ID');};
 const fmt=n=>'Rp '+fmtNum(n);
-const fmtK=n=>fmtNum(n);
+const fmtK=n=>Math.round(Math.abs(Number(n)||0)).toLocaleString('id-ID');
 const parseNum=v=>{const s=String(v??'').replace(/[^\d-]/g,'');return s&&s!=='-'?Number(s):0;};
+const moneyTone=n=>(Number(n)||0)<0?'var(--red)':(Number(n)||0)>0?'var(--green)':'var(--text3)';
 const todayStr=()=>new Date().toISOString().slice(0,10);
 const thisMonth=()=>new Date().toISOString().slice(0,7);
 const inits=n=>n.trim().split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase();
 const catBy=id=>CATS.find(c=>c.id===id)||{l:id||'Lainnya',i:'📦'};
 
 let wallets=[],transactions=[],budgets=[],bills=[],debts=[];
-let selWallet='all',txPeriod='month',rptPeriod='month',debtTab='lend';
+let selWallet='all',txPeriod='all',rptPeriod='month',debtTab='lend';
 let selColor=PAL[0],selTxType='expense',selTxCat='';
 let rawSheet=[],sheetHeaders=[],mainChart=null;
 
@@ -515,6 +516,7 @@ function renderMetrics(){
   const inc=moTx.filter(t=>t.type==='income'&&(isAll||t.walletId===selWallet)).reduce((s,t)=>s+t.amount,0);
   const exp=moTx.filter(t=>t.type==='expense'&&(isAll||t.walletId===selWallet)).reduce((s,t)=>s+t.amount,0);
   document.getElementById('m-bal').textContent=fmt(balance);
+  document.getElementById('m-bal').style.color=moneyTone(balance);
   document.getElementById('m-in').textContent=fmt(inc);
   document.getElementById('m-out').textContent=fmt(exp);
   const net=inc-exp,nel=document.getElementById('m-net');
@@ -543,7 +545,7 @@ function renderStrip(){
       <button class="wdel" title="Edit dompet" onclick="event.stopPropagation();openEditWallet('${w.id}')">✎</button>
       <div class="wdot" style="background:${w.color}22;color:${w.color}">${inits(w.name)}</div>
       <div class="wname">${w.name}${w.hidden?'<span class="whid">sembunyi</span>':''}</div>
-      <div class="wbal" style="color:${w.color}">${fmtK(w.balance)}</div>
+      <div class="wbal" style="color:${moneyTone(w.balance)}">${fmtNum(w.balance)}</div>
       <div class="wtype-lbl">${WTYPES[w.type]||w.type}</div>
     </div>`;
   });
@@ -573,12 +575,13 @@ function renderHome(){
           <div style="font-size:12px;color:var(--text2);margin-top:4px">Semua transaksi yang terkait dompet ini langsung kelihatan di bawah.</div>
         </div>
         <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-left:auto">
+          <button class="btn btn-sm" onclick="gotoPage('tx')">Semua Transaksi</button>
           <button class="btn btn-sm" onclick="openEditWallet('${walletSelected.id}')">Edit Dompet</button>
           <button class="btn btn-sm" onclick="selW('all')">Reset</button>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.5rem;margin-bottom:.75rem">
-        <div class="metric"><div class="metric-lbl">Saldo Sekarang</div><div class="metric-val" style="color:${walletSelected.color}">${fmt(walletSelected.balance)}</div></div>
+        <div class="metric"><div class="metric-lbl">Saldo Sekarang</div><div class="metric-val" style="color:${moneyTone(walletSelected.balance)}">${fmt(walletSelected.balance)}</div></div>
         <div class="metric"><div class="metric-lbl">Jumlah Transaksi</div><div class="metric-val">${walletRows.length}</div></div>
         <div class="metric"><div class="metric-lbl">Pemasukan</div><div class="metric-val" style="color:var(--green)">${fmt(win)}</div></div>
         <div class="metric"><div class="metric-lbl">Pengeluaran</div><div class="metric-val" style="color:var(--red)">${fmt(wout)}</div></div>
@@ -592,10 +595,12 @@ function renderHome(){
   }
   // Recent tx
   const rtEl=document.getElementById('recent-tx');
+  const recentCard=document.getElementById('recent-card');
   const recent=(walletSelected?walletRows:transactions.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')||String(b.id).localeCompare(String(a.id)))).slice(0,6);
   rtEl.innerHTML=recent.length?txItemsHTML(recent):'<div class="empty">Belum ada transaksi</div>';
   const recentTitle=document.getElementById('recent-title');
-  if(recentTitle)recentTitle.textContent=walletSelected?`Transaksi ${walletSelected.name}`:'Transaksi Terakhir';
+  if(recentTitle)recentTitle.textContent='Transaksi Terakhir';
+  if(recentCard)recentCard.style.display=walletSelected?'none':'block';
   // Budget alerts
   const mo=thisMonth(),alerts=[];
   budgets.forEach(b=>{
@@ -952,7 +957,7 @@ function walletCard(w,isChild){
       <div style="font-size:11px;color:var(--text3);margin-top:1px">+${fmtK(inc)} masuk · −${fmtK(exp)} keluar</div>
     </div>
     <div style="text-align:right;flex-shrink:0">
-      <div style="font-size:15px;font-weight:700;color:${w.color}">${fmt(w.balance)}</div>
+      <div style="font-size:15px;font-weight:700;color:${moneyTone(w.balance)}">${fmt(w.balance)}</div>
       <div style="display:flex;gap:6px;margin-top:5px;justify-content:flex-end">
         <button onclick="openEditWallet('${w.id}')" style="font-size:11px;padding:3px 8px;border-radius:5px;border:.5px solid var(--bd2);background:transparent;color:var(--text2);cursor:pointer">Edit</button>
         <button onclick="delW('${w.id}')" style="font-size:11px;padding:3px 8px;border-radius:5px;border:.5px solid var(--bd2);background:transparent;color:var(--red);cursor:pointer">Hapus</button>
