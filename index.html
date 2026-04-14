@@ -293,36 +293,39 @@ input[type=file]{display:none}
 <!-- Modal: Anggaran -->
 <div class="overlay" id="mbudget"><div class="modal">
   <div class="modal-handle"></div>
-  <div class="modal-title">Tambah Anggaran</div>
+  <div class="modal-title" id="mbudget-title">Tambah Anggaran</div>
+  <input type="hidden" id="bgt-id">
   <div class="form-row"><select id="bgt-cat" style="flex:1"></select></div>
   <div class="form-row"><input type="number" id="bgt-limit" placeholder="Batas anggaran (Rp)" min="0"></div>
   <div class="form-row"><select id="bgt-period"><option value="monthly">Bulanan</option><option value="weekly">Mingguan</option></select></div>
-  <div class="modal-foot"><button class="btn" onclick="closeM('mbudget')">Batal</button><button class="btn btn-g" onclick="saveBudget()">Simpan</button></div>
+  <div class="modal-foot"><button class="btn" onclick="closeM('mbudget')">Batal</button><button class="btn btn-g" id="mbudget-save-btn" onclick="saveBudget()">Simpan</button></div>
 </div></div>
 
 <!-- Modal: Tagihan -->
 <div class="overlay" id="mbill"><div class="modal">
   <div class="modal-handle"></div>
-  <div class="modal-title">Tambah Tagihan Berulang</div>
+  <div class="modal-title" id="mbill-title">Tambah Tagihan Berulang</div>
+  <input type="hidden" id="bill-id">
   <div class="form-row"><input type="text" id="bill-name" placeholder="Nama tagihan (misal: Listrik)"></div>
   <div class="form-row"><input type="number" id="bill-amt" placeholder="Jumlah (Rp)" min="0"></div>
   <div class="form-row"><select id="bill-wid"></select><select id="bill-freq"><option value="monthly">Bulanan</option><option value="weekly">Mingguan</option><option value="yearly">Tahunan</option></select></div>
   <div class="form-row"><input type="number" id="bill-day" placeholder="Tanggal jatuh tempo (1-31)" min="1" max="31"><input type="text" id="bill-cat" placeholder="Kategori"></div>
   <div class="toggle-row"><label class="toggle"><input type="checkbox" id="bill-auto" checked><span class="tsl"></span></label><span style="font-size:13px;color:var(--text2)">Catat otomatis saat jatuh tempo</span></div>
-  <div class="modal-foot"><button class="btn" onclick="closeM('mbill')">Batal</button><button class="btn btn-g" onclick="saveBill()">Simpan</button></div>
+  <div class="modal-foot"><button class="btn" onclick="closeM('mbill')">Batal</button><button class="btn btn-g" id="mbill-save-btn" onclick="saveBill()">Simpan</button></div>
 </div></div>
 
 <!-- Modal: Hutang/Piutang -->
 <div class="overlay" id="mdebt"><div class="modal">
   <div class="modal-handle"></div>
   <div class="modal-title" id="mdebt-title">Tambah</div>
+  <input type="hidden" id="debt-id">
   <input type="hidden" id="debt-mode">
   <div class="form-row"><input type="text" id="debt-person" placeholder="Nama orang"></div>
   <div class="form-row"><input type="number" id="debt-amt" placeholder="Jumlah (Rp)" min="0"></div>
   <div class="form-row"><input type="date" id="debt-date"><input type="date" id="debt-due"></div>
   <div style="font-size:11px;color:var(--text3);margin-bottom:.5rem">Tanggal mulai · Jatuh tempo</div>
   <div class="form-row"><input type="text" id="debt-note" placeholder="Catatan (opsional)"></div>
-  <div class="modal-foot"><button class="btn" onclick="closeM('mdebt')">Batal</button><button class="btn btn-g" onclick="saveDebt()">Simpan</button></div>
+  <div class="modal-foot"><button class="btn" onclick="closeM('mdebt')">Batal</button><button class="btn btn-g" id="mdebt-save-btn" onclick="saveDebt()">Simpan</button></div>
 </div></div>
 
 <!-- Modal: Edit Transaksi -->
@@ -514,7 +517,7 @@ function renderStrip(){
   roots.forEach(w=>{
     const isSel=selWallet===w.id;
     html+=`<div class="wcard ${isSel?'sel':''}" style="--wc:${w.color};${isSel?'border-color:'+w.color:''}" onclick="selW('${w.id}')">
-      <button class="wdel" onclick="event.stopPropagation();delW('${w.id}')">✕</button>
+      <button class="wdel" title="Edit dompet" onclick="event.stopPropagation();openEditWallet('${w.id}')">✎</button>
       <div class="wdot" style="background:${w.color}22;color:${w.color}">${inits(w.name)}</div>
       <div class="wname">${w.name}${w.hidden?'<span class="whid">sembunyi</span>':''}</div>
       <div class="wbal" style="color:${w.color}">${fmtK(w.balance)}</div>
@@ -541,7 +544,7 @@ function renderHome(){
   budgets.forEach(b=>{
     const spent=transactions.filter(t=>t.type==='expense'&&t.cat===b.cat&&t.date&&t.date.startsWith(mo)).reduce((s,t)=>s+t.amount,0);
     const pct=spent/b.limit*100;
-    if(pct>=80){const c=catBy(b.cat);alerts.push(`<div class="alert-bar ${pct>=100?'aerr':'awarn'}" style="display:block;margin-bottom:.5rem">${pct>=100?'🚨':'⚠️'} Anggaran <b>${c.i} ${c.l}</b>: ${pct>=100?'Melebihi batas!':'Hampir habis'} (${fmt(spent)} / ${fmt(b.limit)})</div>`);}
+    if(pct>=80){const c=catBy(b.cat);alerts.push(`<div class="alert-bar ${pct>=100?'aerr':'awarn'}" style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.5rem"><span>${pct>=100?'🚨':'⚠️'} Anggaran <b>${c.i} ${c.l}</b>: ${pct>=100?'Melebihi batas!':'Hampir habis'} (${fmt(spent)} / ${fmt(b.limit)})</span><button class="btn btn-xs" onclick="openEditBudget('${b.id}')">Edit</button></div>`);}
   });
   document.getElementById('budget-alerts').innerHTML=alerts.join('');
   // Upcoming bills
@@ -553,10 +556,10 @@ function renderHome(){
     const due=new Date(now.getFullYear(),now.getMonth(),b.day);
     const diff=Math.round((due-now)/864e5);
     const cls=diff<0?'due-over':diff<=3?'due-soon':'';
-    return `<div class="bill-item">
+    return `<div class="bill-item" onclick="openEditBill('${b.id}')" style="cursor:pointer">
       <div class="cat-avt" style="background:var(--al)">${catBy(b.cat).i}</div>
       <div style="flex:1"><div style="font-size:13px;font-weight:600">${b.name}</div><div class="${cls}" style="font-size:11px">${diff<0?'Lewat '+Math.abs(diff)+' hari':diff===0?'Hari ini':diff+' hari lagi'}</div></div>
-      <div style="font-size:13px;font-weight:700">${fmt(b.amount)}</div>
+      <div style="display:flex;align-items:center;gap:6px"><div style="font-size:13px;font-weight:700">${fmt(b.amount)}</div><button class="btn btn-xs" onclick="event.stopPropagation();openEditBill('${b.id}')">Edit</button></div>
     </div>`;
   }).join('');
 }
@@ -628,9 +631,9 @@ function renderBudgetPage(){
     const c=catBy(b.cat);
     const col=pct>=100?'var(--red)':pct>=80?'var(--amber)':'var(--green)';
     return `<div class="budget-item">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;gap:.5rem">
         <div style="display:flex;align-items:center;gap:.5rem"><span style="font-size:20px">${c.i}</span><div><div style="font-size:13px;font-weight:600">${c.l}</div><div style="font-size:11px;color:var(--text2)">${fmt(spent)} / ${fmt(b.limit)}</div></div></div>
-        <div style="display:flex;align-items:center;gap:.5rem"><span style="font-size:12px;font-weight:700;color:${col}">${pct}%</span><button onclick="delBudget('${b.id}')" style="font-size:12px;background:none;border:none;color:var(--text3);cursor:pointer">✕</button></div>
+        <div style="display:flex;align-items:center;gap:.5rem"><span style="font-size:12px;font-weight:700;color:${col}">${pct}%</span><button class="btn btn-xs" onclick="openEditBudget('${b.id}')">Edit</button><button onclick="delBudget('${b.id}')" style="font-size:12px;background:none;border:none;color:var(--text3);cursor:pointer">✕</button></div>
       </div>
       <div class="budget-track"><div class="budget-fill" style="width:${pct}%;background:${col}"></div></div>
     </div>`;
@@ -642,18 +645,39 @@ function fillCatSel(){
   s.innerHTML=CATS.map(c=>`<option value="${c.id}">${c.i} ${c.l}</option>`).join('');
 }
 
+function openEditBudget(id){
+  const b=budgets.find(x=>x.id===id);if(!b)return;
+  fillCatSel();
+  document.getElementById('bgt-id').value=b.id;
+  document.getElementById('bgt-cat').value=b.cat;
+  document.getElementById('bgt-limit').value=b.limit;
+  document.getElementById('bgt-period').value=b.period||'monthly';
+  document.getElementById('mbudget-title').textContent='Edit Anggaran';
+  document.getElementById('mbudget-save-btn').textContent='Update';
+  openM('mbudget');
+  document.getElementById('bgt-id').value=b.id;
+  document.getElementById('bgt-cat').value=b.cat;
+  document.getElementById('bgt-limit').value=b.limit;
+  document.getElementById('bgt-period').value=b.period||'monthly';
+  document.getElementById('mbudget-title').textContent='Edit Anggaran';
+  document.getElementById('mbudget-save-btn').textContent='Update';
+}
+
 async function saveBudget(){
+  const editId=document.getElementById('bgt-id').value;
   const cat=document.getElementById('bgt-cat').value;
   const limit=parseFloat(document.getElementById('bgt-limit').value);
   const period=document.getElementById('bgt-period').value;
   if(!cat||!limit){alert2('Lengkapi semua field','err');return;}
-  const existing=budgets.find(b=>b.cat===cat);
+  const clash=budgets.find(b=>b.cat===cat&&b.id!==editId);
+  if(clash){alert2('Kategori ini sudah punya anggaran. Edit yang lama saja.','err');return;}
+  const existing=editId?budgets.find(b=>b.id===editId):budgets.find(b=>b.cat===cat);
   const id=existing?.id||'b'+uid();
   setSS('sync');
   try{
-    if(existing){await dbU(`budgets?id=eq.${id}`,{limit_amount:limit,period});existing.limit=limit;existing.period=period;}
+    if(existing){await dbU(`budgets?id=eq.${id}`,{cat,limit_amount:limit,period});existing.cat=cat;existing.limit=limit;existing.period=period;}
     else{await dbP('budgets',{id,cat,limit_amount:limit,period});budgets.push({id,cat,limit,period});}
-    closeM('mbudget');setSS('ok');renderBudgetPage();renderHome();alert2('Anggaran disimpan','ok');
+    closeM('mbudget');setSS('ok');renderBudgetPage();renderHome();alert2(existing?'Anggaran diupdate':'Anggaran disimpan','ok');
   }catch(e){setSS('err');alert2('Gagal: '+e.message,'err');}
 }
 
@@ -683,6 +707,7 @@ function renderBills(){
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
         <div style="font-size:13px;font-weight:700">${fmt(b.amount)}</div>
         <div style="display:flex;gap:4px">
+          <button class="btn btn-xs" onclick="openEditBill('${b.id}')">Edit</button>
           <button class="btn btn-xs btn-g" onclick="payBill('${b.id}')">Bayar</button>
           <button onclick="delBill('${b.id}')" style="font-size:12px;background:none;border:none;color:var(--text3);cursor:pointer">✕</button>
         </div>
@@ -691,7 +716,23 @@ function renderBills(){
   }).join('');
 }
 
+function openEditBill(id){
+  const b=bills.find(x=>x.id===id);if(!b)return;
+  openM('mbill');
+  document.getElementById('bill-id').value=b.id;
+  document.getElementById('bill-name').value=b.name;
+  document.getElementById('bill-amt').value=b.amount;
+  document.getElementById('bill-wid').value=b.walletId||'';
+  document.getElementById('bill-freq').value=b.freq||'monthly';
+  document.getElementById('bill-day').value=b.day||1;
+  document.getElementById('bill-cat').value=b.cat||'bill';
+  document.getElementById('bill-auto').checked=!!b.auto;
+  document.getElementById('mbill-title').textContent='Edit Tagihan Berulang';
+  document.getElementById('mbill-save-btn').textContent='Update';
+}
+
 async function saveBill(){
+  const editId=document.getElementById('bill-id').value;
   const name=document.getElementById('bill-name').value.trim();
   const amt=parseFloat(document.getElementById('bill-amt').value);
   const wid=document.getElementById('bill-wid').value;
@@ -700,12 +741,18 @@ async function saveBill(){
   const cat=document.getElementById('bill-cat').value.trim()||'bill';
   const auto=document.getElementById('bill-auto').checked;
   if(!name||!amt){alert2('Lengkapi nama dan jumlah','err');return;}
-  const id='bl'+uid();
+  const id=editId||'bl'+uid();
   setSS('sync');
   try{
-    await dbP('bills',{id,name,amount:amt,wallet_id:wid||null,freq,due_day:day,cat,auto_record:auto});
-    bills.push({id,name,amount:amt,walletId:wid,freq,day,cat,auto});
-    closeM('mbill');setSS('ok');renderBills();renderHome();alert2('Tagihan ditambahkan','ok');
+    if(editId){
+      await dbU(`bills?id=eq.${id}`,{name,amount:amt,wallet_id:wid||null,freq,due_day:day,cat,auto_record:auto});
+      const bill=bills.find(x=>x.id===id);
+      if(bill){bill.name=name;bill.amount=amt;bill.walletId=wid;bill.freq=freq;bill.day=day;bill.cat=cat;bill.auto=auto;}
+    } else {
+      await dbP('bills',{id,name,amount:amt,wallet_id:wid||null,freq,due_day:day,cat,auto_record:auto});
+      bills.push({id,name,amount:amt,walletId:wid,freq,day,cat,auto});
+    }
+    closeM('mbill');setSS('ok');renderBills();renderHome();alert2(editId?'Tagihan diupdate':'Tagihan ditambahkan','ok');
   }catch(e){setSS('err');alert2('Gagal: '+e.message,'err');}
 }
 
@@ -754,21 +801,39 @@ function renderDebts(){
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
         <div style="font-size:13px;font-weight:700;color:${col}">${fmt(d.amount)}</div>
-        <button class="btn btn-xs btn-g" onclick="settleDebt('${d.id}')">Lunas</button>
+        <div style="display:flex;gap:4px"><button class="btn btn-xs" onclick="openEditDebt('${d.id}')">Edit</button><button class="btn btn-xs btn-g" onclick="settleDebt('${d.id}')">Lunas</button></div>
       </div>
     </div>`;
   }).join('');
 }
 
 function openAddDebt(){
+  document.getElementById('debt-id').value='';
   document.getElementById('debt-mode').value=debtTab;
   document.getElementById('mdebt-title').textContent=debtTab==='lend'?'Tambah Piutang':'Tambah Hutang';
+  document.getElementById('mdebt-save-btn').textContent='Simpan';
   ['debt-person','debt-amt','debt-due','debt-note'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('debt-date').value=todayStr();
   openM('mdebt');
 }
 
+function openEditDebt(id){
+  const d=debts.find(x=>x.id===id);if(!d)return;
+  document.getElementById('debt-id').value=d.id;
+  document.getElementById('debt-mode').value=d.mode;
+  document.getElementById('debt-person').value=d.person;
+  document.getElementById('debt-amt').value=d.amount;
+  document.getElementById('debt-date').value=d.date||todayStr();
+  document.getElementById('debt-due').value=d.due||'';
+  document.getElementById('debt-note').value=d.note||'';
+  document.getElementById('mdebt-title').textContent=d.mode==='lend'?'Edit Piutang':'Edit Hutang';
+  document.getElementById('mdebt-save-btn').textContent='Update';
+  openM('mdebt');
+  document.getElementById('debt-id').value=d.id;
+}
+
 async function saveDebt(){
+  const editId=document.getElementById('debt-id').value;
   const mode=document.getElementById('debt-mode').value;
   const person=document.getElementById('debt-person').value.trim();
   const amt=parseFloat(document.getElementById('debt-amt').value);
@@ -776,12 +841,18 @@ async function saveDebt(){
   const due=document.getElementById('debt-due').value;
   const note=document.getElementById('debt-note').value.trim();
   if(!person||!amt){alert2('Lengkapi nama dan jumlah','err');return;}
-  const id='d'+uid();
+  const id=editId||'d'+uid();
   setSS('sync');
   try{
-    await dbP('debts',{id,mode,person,amount:amt,date,due_date:due||null,note,settled:false});
-    debts.push({id,mode,person,amount:amt,date,due,note,settled:false});
-    closeM('mdebt');setSS('ok');renderDebts();alert2((mode==='lend'?'Piutang':'Hutang')+' ditambahkan','ok');
+    if(editId){
+      await dbU(`debts?id=eq.${id}`,{mode,person,amount:amt,date,due_date:due||null,note});
+      const debt=debts.find(x=>x.id===id);
+      if(debt){debt.mode=mode;debt.person=person;debt.amount=amt;debt.date=date;debt.due=due;debt.note=note;}
+    } else {
+      await dbP('debts',{id,mode,person,amount:amt,date,due_date:due||null,note,settled:false});
+      debts.push({id,mode,person,amount:amt,date,due,note,settled:false});
+    }
+    closeM('mdebt');setSS('ok');renderDebts();alert2((mode==='lend'?'Piutang':'Hutang')+(editId?' diupdate':' ditambahkan'),'ok');
   }catch(e){setSS('err');alert2('Gagal: '+e.message,'err');}
 }
 
@@ -852,7 +923,28 @@ function openM(id){
     buildCP();
   }
   if(id==='mtx'){document.getElementById('tx-date').value=todayStr();fillWSelects();renderCatGrid();setTxType(selTxType);}
-  if(id==='mbill') fillWSelects();
+  if(id==='mbudget'){
+    document.getElementById('bgt-id').value='';
+    document.getElementById('mbudget-title').textContent='Tambah Anggaran';
+    document.getElementById('mbudget-save-btn').textContent='Simpan';
+    fillCatSel();
+    document.getElementById('bgt-cat').value=CATS[0]?.id||'';
+    document.getElementById('bgt-limit').value='';
+    document.getElementById('bgt-period').value='monthly';
+  }
+  if(id==='mbill'){
+    fillWSelects();
+    document.getElementById('bill-id').value='';
+    document.getElementById('mbill-title').textContent='Tambah Tagihan Berulang';
+    document.getElementById('mbill-save-btn').textContent='Simpan';
+    document.getElementById('bill-name').value='';
+    document.getElementById('bill-amt').value='';
+    document.getElementById('bill-wid').value='';
+    document.getElementById('bill-freq').value='monthly';
+    document.getElementById('bill-day').value='';
+    document.getElementById('bill-cat').value='bill';
+    document.getElementById('bill-auto').checked=true;
+  }
   document.getElementById(id).classList.add('open');
 }
 
@@ -876,6 +968,12 @@ function openEditWallet(id){
 
 function closeM(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    const openOverlay=document.querySelector('.overlay.open:last-of-type')||document.querySelector('.overlay.open');
+    if(openOverlay)openOverlay.classList.remove('open');
+  }
+});
 
 function buildCP(){
   selColor=PAL[0];
