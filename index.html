@@ -185,6 +185,12 @@ input[type=file]{display:none}
 .alert-bar{font-size:13px;padding:10px 14px;border-radius:var(--r);margin-bottom:.75rem;display:none}
 .aok{background:var(--gl);color:var(--gt)}.aerr{background:var(--rl2);color:var(--rt)}.awarn{background:var(--al);color:var(--at)}
 .empty{text-align:center;padding:2rem;color:var(--text3);font-size:13px}
+.balance-audit{display:none;margin:-.25rem 0 .85rem;padding:.7rem .8rem;border:.5px solid var(--bd);border-radius:var(--r);background:var(--al);color:var(--at);font-size:12px;line-height:1.45}
+.balance-audit b{color:var(--text)}
+.balance-audit .audit-row{display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap}
+.balance-audit .audit-actions{display:flex;gap:.4rem;flex-wrap:wrap}
+.balance-audit .audit-mini{font-size:11px;color:var(--text2);margin-top:.25rem}
+.balance-audit.ok{background:var(--gl);color:var(--gt)}
 .ptabs{display:flex;background:var(--bg2);border-radius:var(--r);padding:3px;gap:2px;margin-bottom:.75rem}
 .ptab{flex:1;text-align:center;padding:6px;border-radius:6px;font-size:12px;font-weight:500;border:none;background:transparent;color:var(--text2);cursor:pointer}
 .ptab.active{background:var(--bg);color:var(--text);font-weight:700}
@@ -263,6 +269,7 @@ html[data-theme="dark"] input[type="date"]{color-scheme:dark}
     <button class="nav-item" onclick="openQuickTx('expense')"><span class="nav-icon">➕</span>Catat Transaksi</button>
     <button class="nav-item" onclick="openQuickTx('transfer')"><span class="nav-icon">🔁</span>Transfer</button>
     <button class="nav-item" onclick="openCategoryManager('standalone')"><span class="nav-icon">🏷️</span>Kelola Kategori</button>
+    <button class="nav-item" onclick="reconcileWalletBalances(true)"><span class="nav-icon">🧮</span>Perbaiki Saldo</button>
     <button class="nav-item" onclick="resetAllData()"><span class="nav-icon">🧨</span>Reset Semua Data</button>
     <div style="flex:1"></div>
     <button class="nav-item" onclick="document.getElementById('fi').click()"><span class="nav-icon">📥</span>Import Excel/CSV</button>
@@ -302,10 +309,12 @@ html[data-theme="dark"] input[type="date"]{color-scheme:dark}
             <div class="inspect-search-wrap"><input id="inspect-search" class="search-input" type="text" placeholder="Cari transaksi dompet ini..." oninput="renderInspect()"></div>
             <button class="btn btn-sm" onclick="gotoPage('tx')">Semua Transaksi</button>
             <button class="btn btn-sm" onclick="openEditSelectedWallet()">Edit Dompet</button>
+            <button class="btn btn-sm" onclick="reconcileWalletBalances(true)">Perbaiki Saldo</button>
             <button class="btn btn-sm" onclick="selW('all')">Semua Dompet</button>
           </div>
         </div>
         <div class="inspect-stats" id="inspect-stats"></div>
+        <div class="balance-audit" id="inspect-audit"></div>
         <div id="inspect-tx"></div>
       </div>
       <div class="card" id="recent-card">
@@ -924,6 +933,77 @@ function txMatchesSearch(t,q){
   return txSearchBlob(t).includes(qq);
 }
 
+
+function txDeltaForWallet(t,wid){
+  const amt=Number(t.amount)||0;
+  if(!wid||!amt) return 0;
+  if(t.type==='income'&&t.walletId===wid) return amt;
+  if(t.type==='expense'&&t.walletId===wid) return -amt;
+  if(t.type==='transfer'){
+    let d=0;
+    if(t.walletId===wid) d-=amt;
+    if(t.toWalletId===wid) d+=amt;
+    return d;
+  }
+  return 0;
+}
+
+function computedWalletBalance(wid){
+  return transactions.reduce((sum,t)=>sum+txDeltaForWallet(t,wid),0);
+}
+
+function walletBalanceAudits(){
+  return wallets.map(w=>{
+    const stored=Number(w.balance)||0;
+    const computed=computedWalletBalance(w.id);
+    const diff=computed-stored;
+    return {w,stored,computed,diff};
+  }).filter(x=>Math.abs(x.diff)>=1);
+}
+
+function walletAuditById(id){
+  const w=wById(id);if(!w)return null;
+  const stored=Number(w.balance)||0;
+  const computed=computedWalletBalance(id);
+  const diff=computed-stored;
+  return {w,stored,computed,diff};
+}
+
+function renderInspectAudit(audit){
+  const box=document.getElementById('inspect-audit');if(!box)return;
+  if(!audit||Math.abs(audit.diff)<1){box.style.display='none';box.innerHTML='';return;}
+  const direction=audit.diff>0?'kurang':'lebih';
+  box.classList.remove('ok');
+  box.style.display='block';
+  box.innerHTML=`
+    <div class="audit-row">
+      <div>
+        <b>Saldo dompet tidak sinkron.</b> Saldo tersimpan ${fmtSigned(audit.stored,{rp:true})}, sedangkan saldo hitung dari transaksi adalah ${fmtSigned(audit.computed,{rp:true})}. Selisih ${fmtSigned(Math.abs(audit.diff),{rp:true})} — saldo tersimpan ${direction} dari transaksi.
+        <div class="audit-mini">Rumus: pemasukan + transfer masuk - pengeluaran - transfer keluar. Klik sinkronkan untuk menjadikan transaksi sebagai sumber saldo.</div>
+      </div>
+      <div class="audit-actions">
+        <button class="btn btn-sm btn-g" onclick="reconcileWalletBalances(true,'${audit.w.id}')">Sinkronkan Dompet Ini</button>
+        <button class="btn btn-sm" onclick="gotoPage('tx')">Cek Transaksi</button>
+      </div>
+    </div>`;
+}
+
+async function reconcileWalletBalances(confirmFirst=true,onlyWalletId=null){
+  const audits=walletBalanceAudits().filter(a=>!onlyWalletId||a.w.id===onlyWalletId);
+  if(!audits.length){alert2('Saldo sudah sinkron dengan transaksi','ok');return;}
+  const totalAbs=audits.reduce((sum,a)=>sum+Math.abs(a.diff),0);
+  const lines=audits.slice(0,8).map(a=>`• ${a.w.name}: ${fmtSigned(a.stored,{rp:true})} → ${fmtSigned(a.computed,{rp:true})} (selisih ${fmtSigned(a.diff,{rp:true})})`).join('\n');
+  const more=audits.length>8?`\n• ...dan ${audits.length-8} dompet lain`:'';
+  if(confirmFirst&&!confirm(`Perbaiki saldo berdasarkan transaksi?\n\n${lines}${more}\n\nTotal selisih absolut: ${fmtSigned(totalAbs,{rp:true})}\n\nCatatan: proses ini menjadikan transaksi sebagai sumber kebenaran saldo. Saldo awal harus ada sebagai transaksi agar tidak hilang.`))return;
+  setSS('sync');
+  try{
+    await Promise.all(audits.map(a=>dbU(`wallets?id=eq.${a.w.id}`,{balance:a.computed})));
+    audits.forEach(a=>{a.w.balance=a.computed;});
+    setSS('ok');renderAll();
+    alert2(`Saldo ${audits.length} dompet disinkronkan dari transaksi`,'ok');
+  }catch(e){setSS('err');alert2('Gagal sinkron saldo: '+e.message,'err');}
+}
+
 function renderInspect(){
   const card=document.getElementById('inspect-card');
   const recentCard=document.getElementById('recent-card');
@@ -941,14 +1021,21 @@ function renderInspect(){
   const expense=rows.filter(t=>t.type==='expense'&&t.walletId===selWallet).reduce((s,t)=>s+t.amount,0);
   const transferIn=rows.filter(t=>t.type==='transfer'&&t.toWalletId===selWallet).reduce((s,t)=>s+t.amount,0);
   const transferOut=rows.filter(t=>t.type==='transfer'&&t.walletId===selWallet).reduce((s,t)=>s+t.amount,0);
+  const storedBalance=Number(w?.balance||0);
+  const computedBalance=income+transferIn-expense-transferOut;
+  const diffBalance=computedBalance-storedBalance;
+  const hasBalanceMismatch=Math.abs(diffBalance)>=1;
+  const audit={w,stored:storedBalance,computed:computedBalance,diff:diffBalance};
   document.getElementById('inspect-title').textContent='Inspect Dompet · '+(w?.name||'-');
   document.getElementById('inspect-stats').innerHTML=`
-    <div class="inspect-stat"><div class="inspect-stat-lbl">Saldo Sekarang</div><div class="inspect-stat-val" style="color:${moneyTone(w?.balance||0)}">${fmtSigned(w?.balance||0,{rp:true})}</div></div>
+    <div class="inspect-stat"><div class="inspect-stat-lbl">Saldo Hitung</div><div class="inspect-stat-val" style="color:${moneyTone(computedBalance)}">${fmtSigned(computedBalance,{rp:true})}</div></div>
+    <div class="inspect-stat"><div class="inspect-stat-lbl">Saldo Tersimpan</div><div class="inspect-stat-val" style="color:${hasBalanceMismatch?'var(--orange)':moneyTone(storedBalance)}">${fmtSigned(storedBalance,{rp:true})}</div></div>
     <div class="inspect-stat"><div class="inspect-stat-lbl">Jumlah Transaksi</div><div class="inspect-stat-val">${fmtNum(rows.length)}</div></div>
     <div class="inspect-stat"><div class="inspect-stat-lbl">Pemasukan</div><div class="inspect-stat-val" style="color:var(--green)">${fmtSigned(income,{rp:true})}</div></div>
     <div class="inspect-stat"><div class="inspect-stat-lbl">Pengeluaran</div><div class="inspect-stat-val" style="color:var(--red)">${fmtSigned(expense,{rp:true})}</div></div>
     <div class="inspect-stat"><div class="inspect-stat-lbl">Transfer Masuk</div><div class="inspect-stat-val" style="color:var(--blue)">${fmtSigned(transferIn,{rp:true})}</div></div>
     <div class="inspect-stat"><div class="inspect-stat-lbl">Transfer Keluar</div><div class="inspect-stat-val">${fmtSigned(transferOut,{rp:true})}</div></div>`;
+  renderInspectAudit(hasBalanceMismatch?audit:null);
   document.getElementById('inspect-tx').innerHTML=visibleRows.length?txItemsHTML(visibleRows):'<div class="empty">Tidak ada transaksi yang cocok</div>';
   card.style.display='block';
   recentCard.style.display='none';
