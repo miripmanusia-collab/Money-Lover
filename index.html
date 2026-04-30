@@ -155,8 +155,13 @@ input:checked+.tsl:before{transform:translateX(16px)}
 .hint{font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:.5rem}
 .wallet-balance-hint{font-size:11px;color:var(--text2);background:var(--bg2);border:.5px solid var(--bd);border-radius:9px;padding:7px 9px;margin:-.25rem 0 .625rem;line-height:1.45}
 .wallet-balance-hint strong{color:var(--text)}
-.wallet-balance-hint .after{color:var(--green);font-weight:700}
+.wallet-balance-hint .balance-val{font-weight:800}
+.wallet-balance-hint .balance-val.pos{color:var(--green)}
+.wallet-balance-hint .balance-val.neg{color:var(--red)}
+.wallet-balance-hint .balance-val.zero{color:var(--text)}
+.wallet-balance-hint .after{color:var(--green);font-weight:800}
 .wallet-balance-hint .after.neg{color:var(--red)}
+.wallet-balance-hint .after.zero{color:var(--text)}
 .tx-suggest-box{display:none;margin:-.25rem 0 .625rem;border:.5px solid var(--bd);border-radius:var(--r);background:var(--bg);overflow:hidden;box-shadow:var(--shadow)}
 .tx-suggest-head{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);padding:7px 10px;background:var(--bg2);border-bottom:.5px solid var(--bd)}
 .tx-suggest-item{width:100%;border:none;border-bottom:.5px solid var(--bd);background:transparent;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;padding:8px 10px;font-family:inherit;cursor:pointer}
@@ -1575,7 +1580,7 @@ async function delW(id,opts={}){
 function walletOptionLabel(w,{showBalance=false}={}){
   const prefix=w.parentId?'↳ ':'';
   const hidden=w.hidden?' [sembunyi]':'';
-  const bal=showBalance?` — ${fmt(w.balance||0)}`:'';
+  const bal=showBalance?` — ${fmtSigned(w.balance||0,{rp:true})}`:'';
   return `${prefix}${w.name}${bal}${hidden}`;
 }
 
@@ -1593,14 +1598,19 @@ function walletProjectedBalance(type,balance,amount,isDestination=false){
   return null;
 }
 
+function balanceClass(n){
+  const v=Number(n)||0;
+  return v<0?'neg':(v>0?'pos':'zero');
+}
+
 function renderWalletBalanceHint(el,w,{type=selTxType,amount=0,isDestination=false,emptyText='Pilih dompet untuk melihat saldo.'}={}){
   if(!el)return;
   if(!w){el.innerHTML=emptyText;return;}
   const current=Number(w.balance)||0;
   const projected=walletProjectedBalance(type,current,amount,isDestination);
-  let html=`<strong>${w.name}</strong> · Saldo sekarang: <strong>${fmt(current)}</strong>`;
+  let html=`<strong>${w.name}</strong> · Saldo sekarang: <span class="balance-val ${balanceClass(current)}">${fmtSigned(current,{rp:true})}</span>`;
   if(projected!==null){
-    html+=` · Setelah transaksi: <span class="after${projected<0?' neg':''}">${fmt(projected)}</span>`;
+    html+=` · Setelah transaksi: <span class="after ${balanceClass(projected)}">${fmtSigned(projected,{rp:true})}</span>`;
   }
   el.innerHTML=html;
 }
