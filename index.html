@@ -157,6 +157,30 @@ input:checked+.tsl:before{transform:translateX(16px)}
 .wallet-balance-hint strong{color:var(--text)}
 .wallet-balance-hint .after{color:var(--green);font-weight:700}
 .wallet-balance-hint .after.neg{color:var(--red)}
+.tx-suggest-box{display:none;margin:-.25rem 0 .625rem;border:.5px solid var(--bd);border-radius:var(--r);background:var(--bg);overflow:hidden;box-shadow:var(--shadow)}
+.tx-suggest-head{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);padding:7px 10px;background:var(--bg2);border-bottom:.5px solid var(--bd)}
+.tx-suggest-item{width:100%;border:none;border-bottom:.5px solid var(--bd);background:transparent;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;padding:8px 10px;font-family:inherit;cursor:pointer}
+.tx-suggest-item:last-child{border-bottom:none}
+.tx-suggest-item:hover{background:var(--bg2)}
+.tx-suggest-title{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px}
+.tx-suggest-meta{font-size:11px;color:var(--text3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px}
+.tx-suggest-amt{font-size:12px;font-weight:700;color:var(--text2);white-space:nowrap}
+
+.amount-tools{display:flex;align-items:center;justify-content:center;gap:.5rem;margin:-.25rem 0 .625rem;flex-wrap:wrap}
+.calc-open-btn{border:.5px solid var(--bd);background:var(--bg2);color:var(--text);border-radius:999px;padding:.38rem .7rem;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+.calc-open-btn:hover{border-color:var(--green);color:var(--green);background:var(--gl)}
+.calc-preview{font-size:12px;color:var(--green);font-weight:700;min-height:16px}
+.calc-preview.err{color:var(--red)}
+.amount-calc-panel{display:none;border:.5px solid var(--bd);background:var(--bg2);border-radius:var(--r);padding:.625rem;margin:-.25rem 0 .75rem;box-shadow:var(--shadow)}
+.amount-calc-panel.open{display:block}
+.amount-calc-screen{background:var(--bg);border:.5px solid var(--bd);border-radius:10px;padding:.55rem .65rem;margin-bottom:.5rem;text-align:right;font-weight:800;font-size:16px;min-height:36px;overflow:auto;color:var(--text)}
+.amount-calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.375rem}
+.amount-calc-btn{border:.5px solid var(--bd);background:var(--bg);color:var(--text);border-radius:10px;padding:.55rem .25rem;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit}
+.amount-calc-btn:hover{border-color:var(--green);background:var(--gl);color:var(--green)}
+.amount-calc-btn.op{background:var(--gl);color:var(--green)}
+.amount-calc-btn.danger{background:var(--rl2);color:var(--red)}
+.amount-calc-btn.eq{background:var(--green);color:white;border-color:var(--green)}
+.amount-calc-note{font-size:10px;color:var(--text3);margin-top:.45rem;text-align:center;line-height:1.4}
 input[type=file]{display:none}
 .alert-bar{font-size:13px;padding:10px 14px;border-radius:var(--r);margin-bottom:.75rem;display:none}
 .aok{background:var(--gl);color:var(--gt)}.aerr{background:var(--rl2);color:var(--rt)}.awarn{background:var(--al);color:var(--at)}
@@ -169,6 +193,15 @@ input[type=file]{display:none}
 .cat-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.375rem;margin-bottom:.75rem}
 .cat-btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:.375rem .25rem;border-radius:var(--r);border:.5px solid var(--bd);background:transparent;cursor:pointer;font-size:10px;color:var(--text2);font-family:inherit}
 .cat-btn.sel{border-color:var(--green);color:var(--green);background:var(--gl)}
+.cat-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.375rem}
+.cat-head .flbl{margin:0}
+.cat-add-btn{border:.5px solid var(--bd);background:var(--bg2);color:var(--green);border-radius:999px;padding:.25rem .55rem;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
+.cat-add-btn:hover{border-color:var(--green);background:var(--gl)}
+.cat-manager-list{display:flex;flex-direction:column;gap:.45rem;max-height:220px;overflow:auto;margin-top:.5rem}
+.cat-manager-item{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.55rem .65rem;border:.5px solid var(--bd);border-radius:var(--r);background:var(--bg2);font-size:12px}
+.cat-manager-meta{color:var(--text3);font-size:11px;margin-top:1px}
+.cat-del-btn{border:none;background:transparent;color:var(--red);cursor:pointer;font-size:13px;padding:.25rem}
+.cat-hint{font-size:11px;color:var(--text3);line-height:1.35;margin-top:.35rem}
 .cat-icon{font-size:20px;line-height:1.2}
 .tx-item{display:flex;align-items:center;gap:.625rem;padding:.5rem 0;border-bottom:.5px solid var(--bd)}
 .tx-item:last-child{border-bottom:none}
@@ -229,6 +262,7 @@ html[data-theme="dark"] input[type="date"]{color-scheme:dark}
     <button class="nav-item" data-page="wallet"><span class="nav-icon">👛</span>Dompet</button>
     <button class="nav-item" onclick="openQuickTx('expense')"><span class="nav-icon">➕</span>Catat Transaksi</button>
     <button class="nav-item" onclick="openQuickTx('transfer')"><span class="nav-icon">🔁</span>Transfer</button>
+    <button class="nav-item" onclick="openCategoryManager('standalone')"><span class="nav-icon">🏷️</span>Kelola Kategori</button>
     <button class="nav-item" onclick="resetAllData()"><span class="nav-icon">🧨</span>Reset Semua Data</button>
     <div style="flex:1"></div>
     <button class="nav-item" onclick="document.getElementById('fi').click()"><span class="nav-icon">📥</span>Import Excel/CSV</button>
@@ -295,6 +329,7 @@ html[data-theme="dark"] input[type="date"]{color-scheme:dark}
         <div style="display:flex;gap:.5rem;flex-wrap:wrap;justify-content:flex-end">
           <button class="btn btn-sm btn-g" onclick="openQuickTx('expense')">+ Transaksi Baru</button>
           <button class="btn btn-sm btn-b" onclick="openQuickTx('transfer')">⇄ Transfer</button>
+          <button class="btn btn-sm" onclick="openCategoryManager('standalone')">🏷️ Kategori</button>
           <button class="btn btn-sm btn-r" onclick="resetAllData()">Reset Semua Data</button>
         </div>
       </div>
@@ -375,13 +410,16 @@ html[data-theme="dark"] input[type="date"]{color-scheme:dark}
     <button class="ptab active" id="tt-expense" onclick="setTxType('expense')">Pengeluaran</button>
     <button class="ptab" id="tt-transfer" onclick="setTxType('transfer')">Transfer</button>
   </div>
-  <div class="form-row"><input type="number" id="tx-amt" placeholder="0" style="font-size:26px;font-weight:700;border:none;background:transparent;text-align:center;flex:1;padding:.25rem 0" inputmode="decimal" oninput="updateTxWalletBalanceHints()"></div>
+  <div class="form-row"><input type="text" id="tx-amt" placeholder="0 atau 50000+25000" style="font-size:26px;font-weight:700;border:none;background:transparent;text-align:center;flex:1;padding:.25rem 0" inputmode="decimal" autocomplete="off" oninput="handleAmountInput('tx-amt')" onkeydown="amountKeydown(event,'tx-amt')"></div>
+  <div class="amount-tools"><button type="button" class="calc-open-btn" onclick="toggleAmountCalc('tx-amt')">🧮 Kalkulator</button><span class="calc-preview" id="tx-amt-calc-preview"></span></div>
+  <div class="amount-calc-panel" id="calc-tx-amt"></div>
   <div class="form-row"><input type="date" id="tx-date"><select id="tx-wid" onchange="updateTxWalletBalanceHints()"></select></div>
   <div class="wallet-balance-hint" id="tx-wid-balance">Pilih dompet untuk melihat saldo.</div>
   <div id="tx-towid-row" class="form-row" style="display:none"><select id="tx-towid" style="flex:1" onchange="updateTxWalletBalanceHints()"></select></div>
   <div class="wallet-balance-hint" id="tx-towid-balance" style="display:none">Pilih dompet tujuan untuk melihat saldo.</div>
-  <div class="form-row"><input type="text" id="tx-desc" placeholder="Keterangan (opsional)"></div>
-  <div id="tx-cat-section"><div class="flbl">Kategori</div><div class="cat-grid" id="tx-cat-grid"></div><input type="hidden" id="tx-cat"></div>
+  <div class="form-row"><input type="text" id="tx-desc" placeholder="Keterangan / tagging, contoh: Cicilan Mobil" autocomplete="off" oninput="renderTxDescSuggestions()" onfocus="renderTxDescSuggestions()" onblur="setTimeout(hideTxDescSuggestions,160)"></div>
+  <div class="tx-suggest-box" id="tx-desc-suggest"></div>
+  <div id="tx-cat-section"><div class="cat-head"><div class="flbl">Kategori</div><button type="button" class="cat-add-btn" onclick="openCategoryManager('tx')">+ Kategori</button></div><div class="cat-grid" id="tx-cat-grid"></div><input type="hidden" id="tx-cat"></div>
   <div class="modal-foot"><button class="btn" onclick="closeM('mtx')">Batal</button><button class="btn btn-g" onclick="saveTx()">Simpan</button></div>
 </div></div>
 
@@ -455,8 +493,10 @@ html[data-theme="dark"] input[type="date"]{color-scheme:dark}
     <button class="ptab" id="ett-transfer" onclick="setEditTxType('transfer')">Transfer</button>
   </div>
   <div class="form-row">
-    <input type="number" id="etx-amt" placeholder="Jumlah" inputmode="decimal" style="font-size:20px;font-weight:700;text-align:center;flex:1">
+    <input type="text" id="etx-amt" placeholder="Jumlah atau 50000+25000" inputmode="decimal" autocomplete="off" oninput="handleAmountInput('etx-amt')" onkeydown="amountKeydown(event,'etx-amt')" style="font-size:20px;font-weight:700;text-align:center;flex:1">
   </div>
+  <div class="amount-tools"><button type="button" class="calc-open-btn" onclick="toggleAmountCalc('etx-amt')">🧮 Kalkulator</button><span class="calc-preview" id="etx-amt-calc-preview"></span></div>
+  <div class="amount-calc-panel" id="calc-etx-amt"></div>
   <div class="form-row">
     <input type="date" id="etx-date" style="flex:1">
     <select id="etx-wid" style="flex:1"></select>
@@ -466,7 +506,7 @@ html[data-theme="dark"] input[type="date"]{color-scheme:dark}
   </div>
   <div class="form-row"><input type="text" id="etx-desc" placeholder="Keterangan"></div>
   <div id="etx-cat-section">
-    <div class="flbl">Kategori</div>
+    <div class="cat-head"><div class="flbl">Kategori</div><button type="button" class="cat-add-btn" onclick="openCategoryManager('edit')">+ Kategori</button></div>
     <div class="cat-grid" id="etx-cat-grid"></div>
     <input type="hidden" id="etx-cat">
   </div>
@@ -475,6 +515,26 @@ html[data-theme="dark"] input[type="date"]{color-scheme:dark}
     <button class="btn" onclick="closeM('metx')">Batal</button>
     <button class="btn btn-g" onclick="saveEditTx()">Update</button>
   </div>
+</div></div>
+
+
+<!-- Modal: Kelola Kategori -->
+<div class="overlay" id="mcat"><div class="modal">
+  <div class="modal-handle"></div>
+  <div class="modal-title">Kelola Kategori</div>
+  <div class="form-row"><input type="text" id="cat-name" placeholder="Nama kategori, contoh: Cicilan Mobil"></div>
+  <div class="form-row">
+    <input type="text" id="cat-icon" placeholder="Emoji" maxlength="4" value="🏷️" style="max-width:90px">
+    <select id="cat-kind" style="flex:1">
+      <option value="expense">Pengeluaran</option>
+      <option value="income">Pemasukan</option>
+      <option value="both">Keduanya</option>
+    </select>
+  </div>
+  <div class="modal-foot" style="margin-top:.25rem"><button class="btn" onclick="closeM('mcat')">Tutup</button><button class="btn btn-g" onclick="saveCustomCategory()">Tambah</button></div>
+  <div class="cat-hint">Kategori custom langsung muncul di form transaksi, edit transaksi, anggaran, dan import CSV. Tanpa ubah database, kategori custom tersimpan di browser ini.</div>
+  <div class="flbl" style="margin-top:1rem">Kategori custom</div>
+  <div id="custom-cat-list" class="cat-manager-list"></div>
 </div></div>
 
 <!-- Modal: Column Map -->
@@ -499,15 +559,34 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 
 const PAL=['#1D9E75','#378ADD','#D85A30','#BA7517','#993556','#534AB7','#639922','#D4537E','#888780'];
 const WTYPES={cash:'Tunai',bank:'Bank',ewallet:'E-wallet',savings:'Tabungan',investment:'Investasi'};
-const CATS=[
-  {id:'food',l:'Makan',i:'🍜'},{id:'transport',l:'Transport',i:'🚗'},
-  {id:'shop',l:'Belanja',i:'🛍️'},{id:'bill',l:'Tagihan',i:'📋'},
-  {id:'health',l:'Kesehatan',i:'💊'},{id:'entertain',l:'Hiburan',i:'🎮'},
-  {id:'edu',l:'Pendidikan',i:'📚'},{id:'family',l:'Keluarga',i:'👨‍👩‍👧'},
-  {id:'invest',l:'Investasi',i:'📈'},{id:'salary',l:'Gaji',i:'💰'},
-  {id:'bonus',l:'Bonus',i:'🎁'},{id:'freelance',l:'Freelance',i:'💻'},
-  {id:'other',l:'Lainnya',i:'📦'},
+const DEFAULT_CATS=[
+  {id:'food',l:'Makan',i:'🍜',kind:'expense'},{id:'coffee',l:'Kopi/Jajan',i:'☕',kind:'expense'},
+  {id:'grocery',l:'Sembako',i:'🛒',kind:'expense'},{id:'transport',l:'Transport',i:'🚗',kind:'expense'},
+  {id:'fuel',l:'Bensin',i:'⛽',kind:'expense'},{id:'parking',l:'Parkir/Tol',i:'🅿️',kind:'expense'},
+  {id:'shop',l:'Belanja',i:'🛍️',kind:'expense'},{id:'bill',l:'Tagihan',i:'📋',kind:'expense'},
+  {id:'utilities',l:'Listrik/Air',i:'💡',kind:'expense'},{id:'internet',l:'Internet/Pulsa',i:'📱',kind:'expense'},
+  {id:'subscription',l:'Langganan',i:'🔁',kind:'expense'},{id:'rent',l:'Sewa/Kontrakan',i:'🏠',kind:'expense'},
+  {id:'health',l:'Kesehatan',i:'💊',kind:'expense'},{id:'insurance',l:'Asuransi',i:'🛡️',kind:'expense'},
+  {id:'debt',l:'Cicilan/Hutang',i:'💳',kind:'expense'},{id:'vehicle',l:'Kendaraan',i:'🏍️',kind:'expense'},
+  {id:'entertain',l:'Hiburan',i:'🎮',kind:'expense'},{id:'travel',l:'Travel',i:'✈️',kind:'expense'},
+  {id:'edu',l:'Pendidikan',i:'📚',kind:'expense'},{id:'family',l:'Keluarga',i:'👨‍👩‍👧',kind:'expense'},
+  {id:'baby',l:'Anak/Bayi',i:'🍼',kind:'expense'},{id:'pet',l:'Hewan',i:'🐾',kind:'expense'},
+  {id:'beauty',l:'Perawatan',i:'💄',kind:'expense'},{id:'sports',l:'Olahraga',i:'🏋️',kind:'expense'},
+  {id:'home',l:'Rumah',i:'🛋️',kind:'expense'},{id:'repair',l:'Service/Repair',i:'🔧',kind:'expense'},
+  {id:'gift',l:'Hadiah',i:'🎁',kind:'expense'},{id:'charity',l:'Donasi',i:'🤲',kind:'expense'},
+  {id:'tax',l:'Pajak',i:'🧾',kind:'expense'},{id:'admin',l:'Admin Bank',i:'🏦',kind:'expense'},
+  {id:'invest',l:'Investasi',i:'📈',kind:'expense'},
+  {id:'salary',l:'Gaji',i:'💰',kind:'income'},{id:'bonus',l:'Bonus',i:'🎁',kind:'income'},
+  {id:'freelance',l:'Freelance',i:'💻',kind:'income'},{id:'business',l:'Bisnis',i:'🏪',kind:'income'},
+  {id:'investment_income',l:'Hasil Investasi',i:'📈',kind:'income'},{id:'interest',l:'Bunga Bank',i:'🏦',kind:'income'},
+  {id:'cashback',l:'Cashback',i:'🪙',kind:'income'},{id:'refund',l:'Refund',i:'↩️',kind:'income'},
+  {id:'gift_income',l:'Hadiah Masuk',i:'🎁',kind:'income'},{id:'rental_income',l:'Sewa Masuk',i:'🏘️',kind:'income'},
+  {id:'receivable',l:'Piutang Dibayar',i:'🤝',kind:'income'},
+  {id:'other',l:'Lainnya',i:'📦',kind:'both'},
 ];
+const CAT_STORE_KEY='dompetku_custom_categories_v1';
+let customCats=[];
+let CATS=[...DEFAULT_CATS];
 let uidSeq=0;
 const uid=()=>Date.now().toString(36)+(uidSeq++).toString(36).padStart(3,'0')+Math.random().toString(36).slice(2,6);
 const fmtNum=n=>Math.round(Math.abs(Number(n)||0)).toLocaleString('id-ID');
@@ -518,8 +597,81 @@ const moneyTone=(n,pos='var(--green)')=>{const v=Number(n)||0;return v<0?'var(--
 const todayStr=()=>new Date().toISOString().slice(0,10);
 const thisMonth=()=>new Date().toISOString().slice(0,7);
 const inits=n=>n.trim().split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase();
-const catBy=id=>CATS.find(c=>c.id===id)||{l:id||'Lainnya',i:'📦'};
+function fallbackCatLabel(id){
+  const raw=String(id||'Lainnya');
+  return raw.replace(/^custom_/,'').replace(/_/g,' ').replace(/\b\w/g,m=>m.toUpperCase())||'Lainnya';
+}
+const catBy=id=>CATS.find(c=>c.id===id)||{id:id||'other',l:fallbackCatLabel(id),i:'📦',kind:'both'};
 const catLabel=id=>catBy(id).l;
+const esc=s=>String(s??'').replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+const catAllowed=(cat,type)=>cat.kind==='both'||cat.kind===type;
+const catsForType=type=>CATS.filter(c=>catAllowed(c,type));
+function slugCatName(name){
+  return String(name||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,40)||'kategori';
+}
+function mergeCategories(){
+  const seen=new Set();
+  CATS=[...DEFAULT_CATS,...customCats].filter(c=>{
+    if(!c||!c.id||seen.has(c.id))return false;seen.add(c.id);return true;
+  });
+}
+function loadCustomCats(){
+  try{customCats=JSON.parse(localStorage.getItem(CAT_STORE_KEY)||'[]').filter(c=>c&&c.id&&c.l);}catch(e){customCats=[];}
+  customCats=customCats.map(c=>({id:String(c.id),l:String(c.l),i:String(c.i||'🏷️'),kind:['income','expense','both'].includes(c.kind)?c.kind:'expense',custom:true}));
+  mergeCategories();
+}
+function persistCustomCats(){localStorage.setItem(CAT_STORE_KEY,JSON.stringify(customCats));mergeCategories();}
+function createCustomCategory(label,kind='expense',icon='🏷️'){
+  const l=String(label||'').trim();if(!l)return null;
+  const k=['income','expense','both'].includes(kind)?kind:'expense';
+  const same=CATS.find(c=>(c.l.toLowerCase()===l.toLowerCase()||c.id.toLowerCase()===l.toLowerCase())&&catAllowed(c,k));
+  if(same)return same;
+  let base='custom_'+slugCatName(l),id=base,i=2;
+  while(CATS.some(c=>c.id===id))id=base+'_'+i++;
+  const cat={id,l,i:String(icon||'🏷️').trim()||'🏷️',kind:k,custom:true};
+  customCats.push(cat);persistCustomCats();return cat;
+}
+function openCategoryManager(context='standalone'){
+  window.__catContext=context;
+  const kind=context==='edit'?selEditTxType:context==='tx'?selTxType:'expense';
+  const k=document.getElementById('cat-kind');if(k)k.value=(kind==='income'||kind==='expense')?kind:'expense';
+  const n=document.getElementById('cat-name');if(n)n.value='';
+  const i=document.getElementById('cat-icon');if(i)i.value='🏷️';
+  renderCustomCategoryList();
+  document.getElementById('mcat').classList.add('open');
+  setTimeout(()=>n?.focus(),60);
+}
+function renderCustomCategoryList(){
+  const box=document.getElementById('custom-cat-list');if(!box)return;
+  if(!customCats.length){box.innerHTML='<div class="empty" style="padding:.75rem">Belum ada kategori custom.</div>';return;}
+  box.innerHTML=customCats.map(c=>{
+    const used=transactions.filter(t=>t.cat===c.id).length;
+    const kind=c.kind==='both'?'Pemasukan & Pengeluaran':c.kind==='income'?'Pemasukan':'Pengeluaran';
+    return `<div class="cat-manager-item"><div><div><b>${esc(c.i)} ${esc(c.l)}</b></div><div class="cat-manager-meta">${esc(kind)} · ${used} transaksi</div></div><button class="cat-del-btn" onclick="deleteCustomCategory('${esc(c.id)}')">✕</button></div>`;
+  }).join('');
+}
+function saveCustomCategory(){
+  const name=document.getElementById('cat-name')?.value||'';
+  const icon=document.getElementById('cat-icon')?.value||'🏷️';
+  const kind=document.getElementById('cat-kind')?.value||'expense';
+  const cat=createCustomCategory(name,kind,icon);
+  if(!cat){alert2('Nama kategori wajib diisi','err');return;}
+  const context=window.__catContext||'standalone';
+  if(context==='tx'){selTxCat=cat.id;document.getElementById('tx-cat').value=cat.id;renderCatGrid();}
+  if(context==='edit'){selEditTxCat=cat.id;document.getElementById('etx-cat').value=cat.id;renderEditCatGrid();}
+  fillCatSel();renderCustomCategoryList();
+  const nameEl=document.getElementById('cat-name');if(nameEl)nameEl.value='';
+  alert2('Kategori ditambahkan','ok');
+}
+function deleteCustomCategory(id){
+  const cat=customCats.find(c=>c.id===id);if(!cat)return;
+  const used=transactions.filter(t=>t.cat===id).length;
+  if(used&&!confirm(`Kategori "${cat.l}" dipakai di ${used} transaksi. Hapus dari daftar kategori custom? Transaksinya tidak ikut terhapus.`))return;
+  customCats=customCats.filter(c=>c.id!==id);persistCustomCats();
+  if(selTxCat===id){selTxCat='other';const el=document.getElementById('tx-cat');if(el)el.value='other';}
+  if(selEditTxCat===id){selEditTxCat='other';const el=document.getElementById('etx-cat');if(el)el.value='other';}
+  fillCatSel();renderCatGrid();renderEditCatGrid();renderCustomCategoryList();renderAll();
+}
 
 let wallets=[],transactions=[],budgets=[],bills=[],debts=[];
 let selWallet='all',txPeriod='all',rptPeriod='month',debtTab='lend';
@@ -935,7 +1087,7 @@ function renderBudgetPage(){
 
 function fillCatSel(){
   const s=document.getElementById('bgt-cat');if(!s)return;
-  s.innerHTML=CATS.map(c=>`<option value="${c.id}">${c.i} ${c.l}</option>`).join('');
+  s.innerHTML=catsForType('expense').map(c=>`<option value="${c.id}">${c.i} ${c.l}</option>`).join('');
 }
 
 async function saveBudget(){
@@ -1151,7 +1303,7 @@ function openM(id){
     document.getElementById('mw-save-btn').textContent='Simpan';
     buildCP();
   }
-  if(id==='mtx'){document.getElementById('tx-date').value=todayStr();fillWSelects();renderCatGrid();setTxType(selTxType);}
+  if(id==='mtx'){document.getElementById('tx-date').value=todayStr();fillWSelects();renderCatGrid();setTxType(selTxType);hideTxDescSuggestions();}
   if(id==='mbill') fillWSelects();
   document.getElementById(id).classList.add('open');
 }
@@ -1367,7 +1519,7 @@ function renderWalletBalanceHint(el,w,{type=selTxType,amount=0,isDestination=fal
 }
 
 function updateTxWalletBalanceHints(){
-  const amount=parseFloat(document.getElementById('tx-amt')?.value)||0;
+  const amount=readAmountInput('tx-amt');
   const wid=document.getElementById('tx-wid')?.value||'';
   const towid=document.getElementById('tx-towid')?.value||'';
   const srcHint=document.getElementById('tx-wid-balance');
@@ -1397,6 +1549,280 @@ function fillWSelects(){
   updateTxWalletBalanceHints();
 }
 
+
+// ════════════════════════════════════════
+// AMOUNT CALCULATOR
+// ════════════════════════════════════════
+function normalizeCalcNumberToken(token){
+  let t=String(token||'').trim();
+  if(!t)return '0';
+  if(t.includes('.')&&t.includes(',')){
+    // Format Indonesia umum: 1.250,50 -> 1250.50
+    t=t.replace(/\./g,'').replace(',', '.');
+  }else if(t.includes(',')){
+    const parts=t.split(',');
+    const looksThousands=parts.length>1&&parts.slice(1).every(p=>p.length===3);
+    t=looksThousands?t.replace(/,/g,''):t.replace(',', '.');
+  }else if(t.includes('.')){
+    const parts=t.split('.');
+    const looksThousands=parts.length>1&&parts.slice(1).every(p=>p.length===3);
+    if(looksThousands)t=t.replace(/\./g,'');
+  }
+  return t;
+}
+
+function tokenizeAmountExpression(raw){
+  let expr=String(raw||'')
+    .replace(/rp/gi,'')
+    .replace(/\s+/g,'')
+    .replace(/[×xX]/g,'*')
+    .replace(/[÷:]/g,'/')
+    .replace(/[−–—]/g,'-');
+  if(!expr)return [];
+  const out=[];
+  let i=0;
+  while(i<expr.length){
+    const ch=expr[i];
+    if(/[0-9.,]/.test(ch)){
+      let j=i+1;
+      while(j<expr.length&&/[0-9.,]/.test(expr[j]))j++;
+      const num=Number(normalizeCalcNumberToken(expr.slice(i,j)));
+      if(!Number.isFinite(num))throw new Error('Angka tidak valid');
+      out.push({type:'num',value:num});i=j;continue;
+    }
+    if('+-*/()'.includes(ch)){out.push({type:'op',value:ch});i++;continue;}
+    throw new Error('Karakter tidak valid');
+  }
+  return out;
+}
+
+function evaluateAmountExpression(raw){
+  const tokens=tokenizeAmountExpression(raw);
+  if(!tokens.length)return 0;
+  let pos=0;
+  const peek=()=>tokens[pos];
+  const eat=v=>{if(peek()&&peek().value===v){pos++;return true;}return false;};
+  function parseExpression(){
+    let value=parseTerm();
+    while(peek()&&(peek().value==='+'||peek().value==='-')){
+      const op=peek().value;pos++;
+      const rhs=parseTerm();
+      value=op==='+'?value+rhs:value-rhs;
+    }
+    return value;
+  }
+  function parseTerm(){
+    let value=parseFactor();
+    while(peek()&&(peek().value==='*'||peek().value==='/')){
+      const op=peek().value;pos++;
+      const rhs=parseFactor();
+      if(op==='/'&&rhs===0)throw new Error('Tidak bisa dibagi nol');
+      value=op==='*'?value*rhs:value/rhs;
+    }
+    return value;
+  }
+  function parseFactor(){
+    if(eat('+'))return parseFactor();
+    if(eat('-'))return -parseFactor();
+    if(eat('(')){
+      const value=parseExpression();
+      if(!eat(')'))throw new Error('Kurung belum lengkap');
+      return value;
+    }
+    const t=peek();
+    if(t&&t.type==='num'){pos++;return t.value;}
+    throw new Error('Ekspresi belum lengkap');
+  }
+  const result=parseExpression();
+  if(pos!==tokens.length)throw new Error('Ekspresi tidak valid');
+  if(!Number.isFinite(result))throw new Error('Hasil tidak valid');
+  return result;
+}
+
+function amountHasOperator(raw){return /[+\-*/×xX÷:()−–—]/.test(String(raw||''));}
+function amountResult(raw){try{return evaluateAmountExpression(raw);}catch(e){return null;}}
+function readAmountInput(id){return amountResult(document.getElementById(id)?.value||'')||0;}
+function plainAmountValue(n){
+  const v=Number(n)||0;
+  return Number.isInteger(v)?String(v):String(Math.round(v*100)/100).replace(/\.0+$/,'');
+}
+
+function renderAmountCalcPanel(id){
+  const panel=document.getElementById('calc-'+id);if(!panel)return;
+  if(panel.dataset.ready==='1')return;
+  const buttons=['7','8','9','÷','4','5','6','×','1','2','3','−','0','000','.','+','(',')','⌫','C','='];
+  panel.innerHTML=`<div class="amount-calc-screen" id="calc-${id}-screen">0</div><div class="amount-calc-grid">${buttons.map(b=>{
+    const cls=b==='='?' eq':(b==='C'?' danger':(/[+−×÷]/.test(b)?' op':''));
+    const label=b;
+    const token=b.replace(/'/g,'');
+    return `<button type="button" class="amount-calc-btn${cls}" onclick="calcAmountPress('${id}','${token}')">${label}</button>`;
+  }).join('')}</div><div class="amount-calc-note">Bisa juga ketik langsung: 50000+25000, 100000/2, atau 25000*3. Tekan Enter atau = untuk memakai hasil.</div>`;
+  panel.dataset.ready='1';
+  updateCalcScreen(id);
+}
+
+function toggleAmountCalc(id){
+  renderAmountCalcPanel(id);
+  const panel=document.getElementById('calc-'+id);if(!panel)return;
+  panel.classList.toggle('open');
+  updateCalcScreen(id);
+}
+
+function updateCalcScreen(id){
+  const el=document.getElementById(id);
+  const screen=document.getElementById('calc-'+id+'-screen');
+  if(!el||!screen)return;
+  const raw=el.value||'';
+  const res=amountResult(raw);
+  if(raw&&res!==null&&amountHasOperator(raw))screen.textContent=`${raw} = ${fmt(res)}`;
+  else screen.textContent=raw||'0';
+}
+
+function renderAmountPreview(id){
+  const el=document.getElementById(id);
+  const prev=document.getElementById(id+'-calc-preview');
+  if(!el||!prev)return;
+  const raw=el.value||'';
+  prev.classList.remove('err');
+  if(!raw||!amountHasOperator(raw)){prev.textContent='';updateCalcScreen(id);return;}
+  const res=amountResult(raw);
+  if(res===null){prev.textContent='Ekspresi belum valid';prev.classList.add('err');}
+  else if(res<=0){prev.textContent='Hasil harus lebih dari 0';prev.classList.add('err');}
+  else prev.textContent='= '+fmt(res);
+  updateCalcScreen(id);
+}
+
+function handleAmountInput(id){
+  renderAmountPreview(id);
+  if(id==='tx-amt')updateTxWalletBalanceHints();
+}
+
+function commitAmountCalc(id){
+  const el=document.getElementById(id);if(!el)return;
+  const raw=el.value||'';
+  const res=amountResult(raw);
+  if(res===null||res<=0){alert2('Jumlah belum valid. Gunakan angka atau operasi +, -, ×, ÷ yang hasilnya lebih dari 0.','err');return;}
+  el.value=plainAmountValue(res);
+  handleAmountInput(id);
+}
+
+function amountKeydown(e,id){
+  if(e.key==='Enter'){
+    e.preventDefault();
+    if(amountHasOperator(document.getElementById(id)?.value||''))commitAmountCalc(id);
+  }
+}
+
+function calcAmountPress(id,token){
+  const el=document.getElementById(id);if(!el)return;
+  if(token==='C')el.value='';
+  else if(token==='⌫')el.value=el.value.slice(0,-1);
+  else if(token==='='){commitAmountCalc(id);return;}
+  else{
+    const t=token==='×'?'*':token==='÷'?'/':token==='−'?'-':token;
+    el.value=(el.value||'')+t;
+  }
+  handleAmountInput(id);
+  el.focus();
+}
+
+
+function normTxText(v){return String(v||'').toLowerCase().replace(/[^a-z0-9\s]/gi,' ').replace(/\s+/g,' ').trim();}
+function cleanTxDesc(v){return String(v||'').replace(/\s+/g,' ').trim();}
+function txHistoryEligible(t){
+  const d=cleanTxDesc(t?.desc);
+  if(!d)return false;
+  if(/^saldo awal/i.test(d)||/^penyesuaian saldo/i.test(d))return false;
+  return true;
+}
+function scoreTxSuggestion(row,q,tokens){
+  const n=normTxText(row.title);
+  let score=(row.count||1)*8;
+  if(q){
+    if(n===q)score+=80;
+    else if(n.startsWith(q))score+=55;
+    else if(n.includes(q))score+=32;
+    const matched=tokens.filter(tok=>n.includes(tok)).length;
+    score+=matched*14;
+  }
+  const latestMs=Date.parse(row.latest?.createdAt||row.latest?.date||'')||0;
+  if(latestMs)score+=Math.min(18,(Date.now()-latestMs)<1000*60*60*24*30?18:8);
+  if(row.latest?.type===selTxType)score+=18;
+  return score;
+}
+function getTxDescSuggestions(query){
+  const q=normTxText(query);
+  const tokens=q.split(' ').filter(Boolean);
+  const map=new Map();
+  [...transactions].filter(txHistoryEligible).forEach(t=>{
+    if(selTxType!=='transfer'&&t.type==='transfer')return;
+    if(selTxType==='transfer'&&t.type!=='transfer')return;
+    const title=cleanTxDesc(t.desc);
+    const key=normTxText(title);
+    if(!key)return;
+    if(tokens.length && !tokens.some(tok=>key.includes(tok)))return;
+    const prev=map.get(key)||{title,count:0,latest:null,catCount:{},walletCount:{},amountCount:{}};
+    prev.count+=1;
+    prev.catCount[t.cat||'other']=(prev.catCount[t.cat||'other']||0)+1;
+    if(t.walletId)prev.walletCount[t.walletId]=(prev.walletCount[t.walletId]||0)+1;
+    const amountKey=String(Number(t.amount)||0);prev.amountCount[amountKey]=(prev.amountCount[amountKey]||0)+1;
+    const prevTime=Date.parse(prev.latest?.createdAt||prev.latest?.date||'')||0;
+    const curTime=Date.parse(t.createdAt||t.date||'')||0;
+    if(!prev.latest||curTime>=prevTime)prev.latest=t;
+    map.set(key,prev);
+  });
+  const bestOf=obj=>Object.entries(obj||{}).sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
+  return [...map.values()].map(row=>({
+    ...row,
+    bestCat:bestOf(row.catCount)||row.latest?.cat||'other',
+    bestWallet:bestOf(row.walletCount)||row.latest?.walletId||'',
+    bestAmount:Number(bestOf(row.amountCount)||row.latest?.amount||0),
+    score:scoreTxSuggestion(row,q,tokens)
+  })).sort((a,b)=>b.score-a.score).slice(0,6);
+}
+window.__txSuggestionCache=[];
+function renderTxDescSuggestions(){
+  const box=document.getElementById('tx-desc-suggest');
+  const input=document.getElementById('tx-desc');
+  if(!box||!input)return;
+  const q=input.value||'';
+  const suggestions=getTxDescSuggestions(q);
+  window.__txSuggestionCache=suggestions;
+  if(!suggestions.length){box.style.display='none';box.innerHTML='';return;}
+  const escapeHtml=v=>String(v??'').replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+  box.innerHTML='<div class="tx-suggest-head">Saran dari transaksi sebelumnya</div>'+suggestions.map((s,i)=>{
+    const cat=catBy(s.bestCat||'other');
+    const w=wById(s.bestWallet);
+    const last=s.latest?.date||'';
+    const meta=[cat.i+' '+cat.l,w?.name,last,`${s.count}x dipakai`].filter(Boolean).join(' · ');
+    return `<button type="button" class="tx-suggest-item" onmousedown="applyTxDescSuggestion(${i});event.preventDefault();"><span><div class="tx-suggest-title">${escapeHtml(s.title)}</div><div class="tx-suggest-meta">${escapeHtml(meta)}</div></span><span class="tx-suggest-amt">${fmt(s.bestAmount||0)}</span></button>`;
+  }).join('');
+  box.style.display='block';
+}
+function hideTxDescSuggestions(){
+  const box=document.getElementById('tx-desc-suggest');
+  if(box)box.style.display='none';
+}
+function applyTxDescSuggestion(i){
+  const s=window.__txSuggestionCache?.[i];
+  if(!s)return;
+  const desc=document.getElementById('tx-desc');
+  const amt=document.getElementById('tx-amt');
+  const cat=document.getElementById('tx-cat');
+  const wid=document.getElementById('tx-wid');
+  if(desc)desc.value=s.title;
+  if(selTxType!=='transfer'){
+    selTxCat=s.bestCat||'other';
+    if(cat)cat.value=selTxCat;
+    renderCatGrid();
+  }
+  if(amt && (!amt.value||readAmountInput('tx-amt')===0) && s.bestAmount)amt.value=s.bestAmount;
+  if(wid && !wid.value && s.bestWallet)wid.value=s.bestWallet;
+  handleAmountInput('tx-amt');
+  updateTxWalletBalanceHints();
+  hideTxDescSuggestions();
+}
+
 // ════════════════════════════════════════
 // TX MODAL
 // ════════════════════════════════════════
@@ -1410,29 +1836,35 @@ function setTxType(type){
   const catSec=document.getElementById('tx-cat-section');
   if(toRow)toRow.style.display=type==='transfer'?'flex':'none';
   if(catSec)catSec.style.display=type==='transfer'?'none':'block';
-  if(type!=='transfer')renderCatGrid();
+  if(type!=='transfer'){
+    const c=catBy(selTxCat||'other');
+    if(selTxCat && !catAllowed(c,type==='income'?'income':'expense'))selTxCat='other';
+    renderCatGrid();
+  }
   updateTxWalletBalanceHints();
+  renderTxDescSuggestions();
 }
 
 function renderCatGrid(){
   const grid=document.getElementById('tx-cat-grid');if(!grid)return;
-  const incIds=['salary','bonus','freelance','other'];
-  const expIds=['food','transport','shop','bill','health','entertain','edu','family','invest','other'];
-  const cats=CATS.filter(c=>(selTxType==='income'?incIds:expIds).includes(c.id));
-  grid.innerHTML=cats.map(c=>`<button class="cat-btn${selTxCat===c.id?' sel':''}" onclick="selCat('${c.id}')"><span class="cat-icon">${c.i}</span>${c.l}</button>`).join('');
+  let cats=catsForType(selTxType==='income'?'income':'expense');
+  if(!selTxCat)selTxCat='other';
+  if(selTxCat && !cats.some(c=>c.id===selTxCat))cats=[...cats,catBy(selTxCat)];
+  const hidden=document.getElementById('tx-cat');if(hidden)hidden.value=selTxCat;
+  grid.innerHTML=cats.map(c=>`<button type="button" class="cat-btn${selTxCat===c.id?' sel':''}" onclick="selCat('${c.id}')"><span class="cat-icon">${c.i}</span>${c.l}</button>`).join('');
 }
 
 function selCat(id){selTxCat=id;document.getElementById('tx-cat').value=id;renderCatGrid();}
 
 async function saveTx(){
-  const amt=parseFloat(document.getElementById('tx-amt').value);
+  const amt=readAmountInput('tx-amt');
   const date=document.getElementById('tx-date').value;
   const wid=document.getElementById('tx-wid').value;
   const desc=document.getElementById('tx-desc').value.trim();
   const cat=document.getElementById('tx-cat').value||'other';
   const type=selTxType;
   const towid=type==='transfer'?document.getElementById('tx-towid').value:'';
-  if(!amt||!date||!wid){alert2('Lengkapi jumlah, tanggal, dan dompet','err');return;}
+  if(!amt||amt<=0||!date||!wid){alert2('Lengkapi jumlah positif, tanggal, dan dompet','err');return;}
   if(type==='transfer'&&!towid){alert2('Pilih dompet tujuan','err');return;}
   if(type==='transfer'&&towid===wid){alert2('Dompet asal dan tujuan tidak boleh sama','err');return;}
   const w=wById(wid),wt2=towid?wById(towid):null;
@@ -1450,7 +1882,10 @@ async function saveTx(){
     transactions.unshift({id,date,desc:desc||catBy(cat).l,type,amount:amt,cat,walletId:wid,toWalletId:towid||null,createdAt});
     closeM('mtx');
     document.getElementById('tx-amt').value='';
+    handleAmountInput('tx-amt');
+    const txCalc=document.getElementById('calc-tx-amt');if(txCalc)txCalc.classList.remove('open');
     document.getElementById('tx-desc').value='';
+    hideTxDescSuggestions();
     selTxCat='';selEditTxCat='';
     setSS('ok');renderAll();alert2('Transaksi dicatat','ok');
   }catch(e){setSS('err');alert2('Gagal: '+e.message,'err');}
@@ -1468,6 +1903,7 @@ function openEditTx(id){
   document.getElementById('etx-old-towid').value=t.toWalletId||'';
   // Fill form
   document.getElementById('etx-amt').value=t.amount;
+  handleAmountInput('etx-amt');
   document.getElementById('etx-date').value=t.date;
   document.getElementById('etx-desc').value=t.desc||'';
   document.getElementById('etx-cat').value=t.cat||'other';
@@ -1495,15 +1931,20 @@ function setEditTxType(type){
   const catSec=document.getElementById('etx-cat-section');
   if(toRow)toRow.style.display=type==='transfer'?'flex':'none';
   if(catSec)catSec.style.display=type==='transfer'?'none':'block';
+  if(type!=='transfer'){
+    const c=catBy(selEditTxCat||'other');
+    if(selEditTxCat && !catAllowed(c,type==='income'?'income':'expense'))selEditTxCat='other';
+  }
   renderEditCatGrid();
 }
 
 function renderEditCatGrid(){
   const grid=document.getElementById('etx-cat-grid');if(!grid)return;
-  const incIds=['salary','bonus','freelance','other'];
-  const expIds=['food','transport','shop','bill','health','entertain','edu','family','invest','other'];
-  const cats=CATS.filter(c=>(selEditTxType==='income'?incIds:expIds).includes(c.id));
-  grid.innerHTML=cats.map(c=>`<button class="cat-btn${selEditTxCat===c.id?' sel':''}" onclick="selEditCat('${c.id}')"><span class="cat-icon">${c.i}</span>${c.l}</button>`).join('');
+  let cats=catsForType(selEditTxType==='income'?'income':'expense');
+  if(!selEditTxCat)selEditTxCat='other';
+  if(selEditTxCat && !cats.some(c=>c.id===selEditTxCat))cats=[...cats,catBy(selEditTxCat)];
+  const hidden=document.getElementById('etx-cat');if(hidden)hidden.value=selEditTxCat;
+  grid.innerHTML=cats.map(c=>`<button type="button" class="cat-btn${selEditTxCat===c.id?' sel':''}" onclick="selEditCat('${c.id}')"><span class="cat-icon">${c.i}</span>${c.l}</button>`).join('');
 }
 
 function selEditCat(id){selEditTxCat=id;document.getElementById('etx-cat').value=id;renderEditCatGrid();}
@@ -1515,7 +1956,7 @@ async function saveEditTx(){
   const oldWid=document.getElementById('etx-old-wid').value;
   const oldTowid=document.getElementById('etx-old-towid').value;
 
-  const newAmt=parseFloat(document.getElementById('etx-amt').value);
+  const newAmt=readAmountInput('etx-amt');
   const newDate=document.getElementById('etx-date').value;
   const newWid=document.getElementById('etx-wid').value;
   const newDesc=document.getElementById('etx-desc').value.trim();
@@ -1523,7 +1964,7 @@ async function saveEditTx(){
   const newType=selEditTxType;
   const newTowid=newType==='transfer'?document.getElementById('etx-towid').value:'';
 
-  if(!newAmt||!newDate||!newWid){alert2('Lengkapi jumlah, tanggal, dan dompet','err');return;}
+  if(!newAmt||newAmt<=0||!newDate||!newWid){alert2('Lengkapi jumlah positif, tanggal, dan dompet','err');return;}
   if(newType==='transfer'&&!newTowid){alert2('Pilih dompet tujuan','err');return;}
   if(newType==='transfer'&&newTowid===newWid){alert2('Dompet asal dan tujuan tidak boleh sama','err');return;}
 
@@ -1673,9 +2114,10 @@ function downloadCSVFile(filename,rows){
 function downloadImportTemplate(){
   const rows=[
     ['Tanggal','Deskripsi','Tipe','Jumlah','Kategori','Dompet','Dompet Tujuan'],
-    [todayStr(),'Gaji bulanan','income','5000000','salary','Mandiri',''],
-    [todayStr(),'Makan siang','expense','50000','food','Mandiri',''],
-    [todayStr(),'Pindah ke tabungan','transfer','1000000','other','Mandiri','Tabungan']
+    [todayStr(),'Gaji bulanan','income','5000000','Gaji','Mandiri',''],
+    [todayStr(),'Makan siang','expense','50000','Makan','Mandiri',''],
+    [todayStr(),'Cicilan mobil','expense','2500000','Cicilan Mobil','Mandiri',''],
+    [todayStr(),'Pindah ke tabungan','transfer','1000000','Lainnya','Mandiri','Tabungan']
   ];
   downloadCSVFile('template-import-dompetku.csv',rows);
   alert2('Template import CSV diunduh','ok');
@@ -1727,10 +2169,12 @@ function normType(v,amount){
 }
 function normalizeCatValue(v,type){
   const raw=String(v||'').trim();
-  if(!raw)return type==='income'?'other':'other';
+  if(!raw)return 'other';
   const n=raw.toLowerCase();
   const found=CATS.find(c=>c.id.toLowerCase()===n||c.l.toLowerCase()===n);
-  return found?found.id:raw;
+  if(found)return found.id;
+  const cat=createCustomCategory(raw,type==='income'?'income':'expense','🏷️');
+  return cat?.id||'other';
 }
 function findWalletByName(name){
   const n=String(name||'').trim().toLowerCase();
@@ -1849,7 +2293,7 @@ function exportCSV(){
   const rows=[['Tanggal','Deskripsi','Tipe','Jumlah','Kategori','Dompet','Dompet Tujuan']];
   transactions.forEach(t=>{
     const w=wById(t.walletId),wt2=t.toWalletId?wById(t.toWalletId):null;
-    rows.push([t.date,t.desc||'',t.type,t.amount,t.cat||'',w?.name||'',wt2?.name||'']);
+    rows.push([t.date,t.desc||'',t.type,t.amount,catLabel(t.cat)||'',w?.name||'',wt2?.name||'']);
   });
   downloadCSVFile('dompetku-export-'+todayStr()+'.csv',rows);
   alert2('Export CSV berhasil diunduh. Format ini bisa langsung di-import lagi.','ok');
@@ -1872,6 +2316,7 @@ function alert2(msg,type){
 // wallets, transactions, budgets, bills, debts
 // Lihat README atau jalankan SQL di SQL Editor Supabase
 
+loadCustomCats();
 initTheme();
 loadAll();
 </script>
