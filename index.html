@@ -502,7 +502,8 @@ const CATS=[
   {id:'bonus',l:'Bonus',i:'🎁'},{id:'freelance',l:'Freelance',i:'💻'},
   {id:'other',l:'Lainnya',i:'📦'},
 ];
-const uid=()=>Math.random().toString(36).slice(2,10);
+let uidSeq=0;
+const uid=()=>Date.now().toString(36)+(uidSeq++).toString(36).padStart(3,'0')+Math.random().toString(36).slice(2,6);
 const fmtNum=n=>Math.round(Math.abs(Number(n)||0)).toLocaleString('id-ID');
 const fmt=n=>'Rp '+fmtNum(n);
 const fmtK=n=>fmtNum(n);
@@ -587,7 +588,7 @@ async function loadAll(){
       dbG('debts?order=created_at.asc'),
     ]);
     wallets=(ws||[]).map(w=>({id:w.id,name:w.name,type:w.type,color:w.color,balance:w.balance,hidden:w.hidden,parentId:w.parent_id,envelopes:w.envelopes||[]}));
-    transactions=(txs||[]).map(t=>({id:t.id,date:t.date,desc:t.description,type:t.type,amount:t.amount,cat:t.cat,walletId:t.wallet_id,toWalletId:t.to_wallet_id}));
+    transactions=(txs||[]).map(t=>({id:t.id,date:t.date,desc:t.description,type:t.type,amount:t.amount,cat:t.cat,walletId:t.wallet_id,toWalletId:t.to_wallet_id,createdAt:t.created_at||''}));
     budgets=(bgs||[]).map(b=>({id:b.id,cat:b.cat,limit:b.limit_amount,period:b.period}));
     bills=(bls||[]).map(b=>({id:b.id,name:b.name,amount:b.amount,walletId:b.wallet_id,freq:b.freq,day:b.due_day,cat:b.cat,auto:b.auto_record}));
     debts=(dbs||[]).map(d=>({id:d.id,mode:d.mode,person:d.person,amount:d.amount,date:d.date,due:d.due_date,note:d.note,settled:d.settled}));
@@ -696,6 +697,24 @@ function renderMetrics(){
 // ════════════════════════════════════════
 const wById=id=>wallets.find(w=>w.id===id);
 
+function txCreatedAt(t){
+  return t?.createdAt||t?.created_at||'';
+}
+
+function sortTxLatest(rows){
+  return (rows||[]).slice().sort((a,b)=>{
+    const dateCmp=(b.date||'').localeCompare(a.date||'');
+    if(dateCmp)return dateCmp;
+    const createdCmp=txCreatedAt(b).localeCompare(txCreatedAt(a));
+    if(createdCmp)return createdCmp;
+    return String(b.id||'').localeCompare(String(a.id||''));
+  });
+}
+
+function refreshTxOrder(){
+  transactions=sortTxLatest(transactions);
+}
+
 function renderStrip(){
   const el=document.getElementById('wstrip');
   const vis=wallets.filter(w=>!w.hidden);
@@ -721,7 +740,7 @@ function selW(id){selWallet=id;renderAll();}
 // HOME
 // ════════════════════════════════════════
 function walletScopedTransactions(id){
-  return transactions.filter(t=>t.walletId===id||t.toWalletId===id).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  return sortTxLatest(transactions.filter(t=>t.walletId===id||t.toWalletId===id));
 }
 
 function txSearchBlob(t){
@@ -792,7 +811,7 @@ function renderHome(){
   // Recent tx
   const rtEl=document.getElementById('recent-tx');
   const homeQuery=document.getElementById('home-search')?.value||'';
-  const recentBase=transactions.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')||String(b.id).localeCompare(String(a.id)));
+  const recentBase=sortTxLatest(transactions);
   const recent=recentBase.filter(t=>txMatchesSearch(t,homeQuery)).slice(0,20);
   rtEl.innerHTML=recent.length?txItemsHTML(recent):'<div class="empty">Tidak ada transaksi yang cocok</div>';
   // Budget alerts
@@ -865,7 +884,7 @@ function renderTxPage(){
   const qs=document.getElementById('tx-search')?.value||'';
   const wf=fwEl?.value||'all';
   const tf=tfEl?.value||'';
-  const rows=filterByPeriod(transactions,txPeriod).filter(t=>(wf==='all'||t.walletId===wf||t.toWalletId===wf)&&(!tf||t.type===tf)&&txMatchesSearch(t,qs));
+  const rows=sortTxLatest(filterByPeriod(transactions,txPeriod).filter(t=>(wf==='all'||t.walletId===wf||t.toWalletId===wf)&&(!tf||t.type===tf)&&txMatchesSearch(t,qs)));
   document.getElementById('tx-list').innerHTML=rows.length?txItemsHTML(rows):'<div class="empty">Tidak ada transaksi</div>';
 }
 
@@ -984,11 +1003,12 @@ async function payBill(id){
   const b=bills.find(x=>x.id===id);if(!b)return;
   const w=wById(b.walletId);
   const txId='t'+uid();
+  const createdAt=new Date().toISOString();
   setSS('sync');
   try{
-    await dbP('transactions',{id:txId,date:todayStr(),description:b.name,type:'expense',amount:b.amount,cat:b.cat,wallet_id:b.walletId||null,to_wallet_id:null});
+    await dbP('transactions',{id:txId,date:todayStr(),description:b.name,type:'expense',amount:b.amount,cat:b.cat,wallet_id:b.walletId||null,to_wallet_id:null,created_at:createdAt});
     if(w){w.balance-=b.amount;await dbU(`wallets?id=eq.${w.id}`,{balance:w.balance});}
-    transactions.unshift({id:txId,date:todayStr(),desc:b.name,type:'expense',amount:b.amount,cat:b.cat,walletId:b.walletId,toWalletId:null});
+    transactions.unshift({id:txId,date:todayStr(),desc:b.name,type:'expense',amount:b.amount,cat:b.cat,walletId:b.walletId,toWalletId:null,createdAt});
     setSS('ok');renderAll();alert2(b.name+' '+fmt(b.amount)+' dicatat','ok');
   }catch(e){setSS('err');alert2('Gagal: '+e.message,'err');}
 }
@@ -1199,9 +1219,10 @@ function pickC(el,c){document.querySelectorAll('#cpick div').forEach(d=>d.classL
 
 function makeBalanceTx({walletId,amount,type,desc,date=todayStr()}){
   const txId='t'+uid();
+  const createdAt=new Date().toISOString();
   return {
-    local:{id:txId,date,desc,type,amount,cat:'other',walletId,toWalletId:null},
-    remote:{id:txId,date,description:desc,type,amount,cat:'other',wallet_id:walletId,to_wallet_id:null}
+    local:{id:txId,date,desc,type,amount,cat:'other',walletId,toWalletId:null,createdAt},
+    remote:{id:txId,date,description:desc,type,amount,cat:'other',wallet_id:walletId,to_wallet_id:null,created_at:createdAt}
   };
 }
 
@@ -1355,14 +1376,15 @@ async function saveTx(){
   const id='t'+uid();
   let nb=w?w.balance:0,nbt=wt2?wt2.balance:0;
   if(type==='income')nb+=amt;else if(type==='expense')nb-=amt;else{nb-=amt;nbt+=amt;}
+  const createdAt=new Date().toISOString();
   setSS('sync');
   try{
-    await dbP('transactions',{id,date,description:desc||catBy(cat).l,type,amount:amt,cat,wallet_id:wid,to_wallet_id:towid||null});
+    await dbP('transactions',{id,date,description:desc||catBy(cat).l,type,amount:amt,cat,wallet_id:wid,to_wallet_id:towid||null,created_at:createdAt});
     const patches=[dbU(`wallets?id=eq.${wid}`,{balance:nb})];
     if(wt2)patches.push(dbU(`wallets?id=eq.${towid}`,{balance:nbt}));
     await Promise.all(patches);
     if(w)w.balance=nb;if(wt2)wt2.balance=nbt;
-    transactions.unshift({id,date,desc:desc||catBy(cat).l,type,amount:amt,cat,walletId:wid,toWalletId:towid||null});
+    transactions.unshift({id,date,desc:desc||catBy(cat).l,type,amount:amt,cat,walletId:wid,toWalletId:towid||null,createdAt});
     closeM('mtx');
     document.getElementById('tx-amt').value='';
     document.getElementById('tx-desc').value='';
@@ -1472,6 +1494,7 @@ async function saveEditTx(){
     // Step 4: Update local state
     const tx=transactions.find(x=>x.id===id);
     if(tx){tx.date=newDate;tx.desc=descFinal;tx.type=newType;tx.amount=newAmt;tx.cat=newCat;tx.walletId=newWid;tx.toWalletId=newTowid||null;}
+    refreshTxOrder();
 
     closeM('metx');setSS('ok');renderAll();alert2('Transaksi berhasil diupdate','ok');
   }catch(e){setSS('err');alert2('Gagal update: '+e.message,'err');}
@@ -1733,9 +1756,10 @@ async function importRowsAuto(rows,filename){
       else{fromW.balance=(Number(fromW.balance)||0)-amt;toW.balance=(Number(toW.balance)||0)+amt;changed.set(toW.id,toW);}
       changed.set(fromW.id,fromW);
       const id='t'+uid();
+      const createdAt=new Date(Date.now()-added).toISOString();
       txRows.push({
-        local:{id,date,desc,type,amount:amt,cat,walletId:fromW.id,toWalletId:toW?.id||null},
-        remote:{id,date,description:desc,type,amount:amt,cat,wallet_id:fromW.id,to_wallet_id:toW?.id||null}
+        local:{id,date,desc,type,amount:amt,cat,walletId:fromW.id,toWalletId:toW?.id||null,createdAt},
+        remote:{id,date,description:desc,type,amount:amt,cat,wallet_id:fromW.id,to_wallet_id:toW?.id||null,created_at:createdAt}
       });
       added++;
     }
@@ -1743,7 +1767,7 @@ async function importRowsAuto(rows,filename){
     for(let i=0;i<txRows.length;i+=50)await dbP('transactions',txRows.slice(i,i+50).map(r=>r.remote));
     await Promise.all([...changed.values()].map(w=>dbU(`wallets?id=eq.${w.id}`,{balance:w.balance})));
     txRows.forEach(r=>transactions.push(r.local));
-    transactions.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    refreshTxOrder();
     setSS('ok');renderAll();
     const newWalletCount=Object.keys(created).length;
     alert2(`Import ${added} transaksi berhasil${newWalletCount?' · '+newWalletCount+' dompet baru dibuat':''}${skipped?' · '+skipped+' baris dilewati':''}`,'ok');
