@@ -82,8 +82,8 @@ button{font-family:inherit;cursor:pointer}
 .wbal{font-size:13px;font-weight:700}
 .wtype-lbl{font-size:10px;color:var(--text3)}
 .whid{font-size:9px;padding:1px 4px;border-radius:99px;background:var(--grl);color:var(--grt);font-weight:600;margin-left:3px}
-.wdel{position:absolute;top:4px;right:4px;font-size:12px;background:none;border:none;color:var(--text3);opacity:0;padding:2px 4px;border-radius:4px}
-.wcard:hover .wdel{opacity:1}
+.wdel{position:absolute;top:4px;right:4px;font-size:12px;background:var(--bg2);border:.5px solid var(--bd);color:var(--text2);opacity:1;padding:2px 6px;border-radius:7px}
+.wdel:hover{color:var(--red);border-color:var(--red)}
 .wadd{min-width:80px;border-radius:var(--rl);border:1.5px dashed var(--bd2);padding:.75rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--text3);flex-shrink:0;background:transparent}
 .wadd:hover{background:var(--bg2)}
 .inspect-card{padding-top:1rem}
@@ -191,6 +191,7 @@ input[type=file]{display:none}
     <button class="nav-item" data-page="wallet"><span class="nav-icon">👛</span>Dompet</button>
     <button class="nav-item" onclick="openQuickTx('expense')"><span class="nav-icon">➕</span>Catat Transaksi</button>
     <button class="nav-item" onclick="openQuickTx('transfer')"><span class="nav-icon">🔁</span>Transfer</button>
+    <button class="nav-item" onclick="resetAllData()"><span class="nav-icon">🧨</span>Reset Semua Data</button>
     <div style="flex:1"></div>
     <button class="nav-item" onclick="document.getElementById('fi').click()"><span class="nav-icon">📥</span>Import Excel/CSV</button>
     <button class="nav-item" onclick="exportCSV()"><span class="nav-icon">📤</span>Export CSV</button>
@@ -227,7 +228,7 @@ input[type=file]{display:none}
             <div class="inspect-search-wrap"><input id="inspect-search" class="search-input" type="text" placeholder="Cari transaksi dompet ini..." oninput="renderInspect()"></div>
             <button class="btn btn-sm" onclick="gotoPage('tx')">Semua Transaksi</button>
             <button class="btn btn-sm" onclick="openEditSelectedWallet()">Edit Dompet</button>
-            <button class="btn btn-sm" onclick="selW('all')">Reset</button>
+            <button class="btn btn-sm" onclick="selW('all')">Semua Dompet</button>
           </div>
         </div>
         <div class="inspect-stats" id="inspect-stats"></div>
@@ -254,7 +255,7 @@ input[type=file]{display:none}
         <div style="display:flex;gap:.5rem;flex-wrap:wrap;justify-content:flex-end">
           <button class="btn btn-sm btn-g" onclick="openQuickTx('expense')">+ Transaksi Baru</button>
           <button class="btn btn-sm btn-b" onclick="openQuickTx('transfer')">⇄ Transfer</button>
-          <button class="btn btn-sm btn-r" onclick="deleteAllTransactions()">Hapus Semua Transaksi</button>
+          <button class="btn btn-sm btn-r" onclick="resetAllData()">Reset Semua Data</button>
         </div>
       </div>
       <div class="tx-topbar">
@@ -308,7 +309,7 @@ input[type=file]{display:none}
         <div class="sec-title">Kelola Dompet</div>
         <div style="display:flex;gap:.5rem;flex-wrap:wrap;justify-content:flex-end">
           <button class="btn btn-sm btn-g" onclick="openM('mwallet')">+ Baru</button>
-          <button class="btn btn-sm btn-r" onclick="deleteAllWallets()">Reset Semua Data</button>
+          <button class="btn btn-sm btn-r" onclick="resetAllData()">Reset Semua Data</button>
         </div>
       </div>
       <div id="wallet-full"></div>
@@ -1057,6 +1058,10 @@ function openQuickTx(type='expense'){
   }
 }
 
+// Alias yang dipakai tombol kartu dompet di dashboard.
+function openWalletModal(){ openM('mwallet'); }
+async function delWallet(id){ return delW(id); }
+
 function closeM(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 
@@ -1326,39 +1331,34 @@ async function delTx(id){
 
 
 // ════════════════════════════════════════
-// BULK DELETE
+// RESET / BULK DELETE
 // ════════════════════════════════════════
-async function deleteAllTransactions(){
-  if(!transactions.length){alert2('Tidak ada transaksi untuk dihapus','warn');return;}
-  const typed=prompt('Ketik HAPUS TRANSAKSI untuk menghapus semua transaksi dan mereset saldo semua dompet ke 0.');
-  if(typed!=='HAPUS TRANSAKSI')return;
-  setSS('sync');
-  try{
-    await dbD('transactions?id=not.is.null');
-    const patches=wallets.map(w=>dbU(`wallets?id=eq.${w.id}`,{balance:0}));
-    await Promise.all(patches);
-    transactions=[];
-    wallets=wallets.map(w=>({...w,balance:0}));
-    setSS('ok');renderAll();alert2('Semua transaksi dihapus dan saldo dompet direset ke 0','ok');
-  }catch(e){setSS('err');alert2('Gagal hapus semua transaksi: '+e.message,'err');}
-}
-
-async function deleteAllWallets(){
+async function resetAllData(){
   const hasData=wallets.length||transactions.length||budgets.length||bills.length||debts.length;
   if(!hasData){alert2('Tidak ada data untuk dihapus','warn');return;}
-  const typed=prompt('Ketik RESET SEMUA untuk menghapus semua dompet, transaksi, anggaran, tagihan, hutang/piutang, dan data terkait.');
+  const typed=prompt('Ketik RESET SEMUA untuk menghapus SEMUA data: dompet, transaksi, anggaran, tagihan, hutang/piutang. Tindakan ini tidak bisa dibatalkan.');
   if(typed!=='RESET SEMUA')return;
   setSS('sync');
   try{
+    // Urutan penting: data yang mereferensikan dompet dihapus dulu, baru dompetnya.
     await dbD('transactions?id=not.is.null');
     await dbD('budgets?id=not.is.null');
     await dbD('bills?id=not.is.null');
     await dbD('debts?id=not.is.null');
     await dbD('wallets?id=not.is.null');
-    wallets=[];transactions=[];budgets=[];bills=[];debts=[];selWallet='all';
-    setSS('ok');renderAll();alert2('Semua data aplikasi berhasil dihapus','ok');
-  }catch(e){setSS('err');alert2('Gagal hapus semua data: '+e.message,'err');}
+    wallets=[];
+    transactions=[];
+    budgets=[];
+    bills=[];
+    debts=[];
+    selWallet='all';
+    setSS('ok');renderAll();alert2('Semua data aplikasi berhasil dihapus, termasuk semua dompet.','ok');
+  }catch(e){setSS('err');alert2('Gagal reset semua data: '+e.message,'err');}
 }
+
+// Kompatibilitas tombol lama: semua aksi massal sekarang berarti reset penuh.
+async function deleteAllTransactions(){ return resetAllData(); }
+async function deleteAllWallets(){ return resetAllData(); }
 
 // ════════════════════════════════════════
 // REPORT
