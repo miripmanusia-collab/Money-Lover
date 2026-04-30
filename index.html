@@ -64,6 +64,7 @@ button{font-family:inherit;cursor:pointer}
 .btn:hover{background:var(--bg2)}.btn:active{transform:scale(.97)}
 .btn-g{background:var(--green);color:#fff;border-color:var(--green)}.btn-g:hover{background:var(--gd)}
 .btn-b{background:var(--blue);color:#fff;border-color:var(--blue)}.btn-b:hover{background:var(--bld)}
+.btn-r{background:var(--red);color:#fff;border-color:var(--red)}.btn-r:hover{filter:brightness(.92)}
 .btn-sm{font-size:12px;padding:5px 10px}
 .btn-xs{font-size:11px;padding:3px 8px}
 .fab{position:fixed;bottom:calc(62px + env(safe-area-inset-bottom));right:1rem;width:52px;height:52px;border-radius:50%;background:var(--green);color:#fff;border:none;font-size:26px;display:flex;align-items:center;justify-content:center;z-index:20;box-shadow:0 3px 12px rgba(29,158,117,.4)}
@@ -188,6 +189,8 @@ input[type=file]{display:none}
     <button class="nav-item" data-page="bill"><span class="nav-icon">🔔</span>Tagihan</button>
     <button class="nav-item" data-page="debt"><span class="nav-icon">🤝</span>Hutang &amp; Piutang</button>
     <button class="nav-item" data-page="wallet"><span class="nav-icon">👛</span>Dompet</button>
+    <button class="nav-item" onclick="openQuickTx('expense')"><span class="nav-icon">➕</span>Catat Transaksi</button>
+    <button class="nav-item" onclick="openQuickTx('transfer')"><span class="nav-icon">🔁</span>Transfer</button>
     <div style="flex:1"></div>
     <button class="nav-item" onclick="document.getElementById('fi').click()"><span class="nav-icon">📥</span>Import Excel/CSV</button>
     <button class="nav-item" onclick="exportCSV()"><span class="nav-icon">📤</span>Export CSV</button>
@@ -199,7 +202,8 @@ input[type=file]{display:none}
       <div class="topbar-logo">Dompet<span>ku</span></div>
       <div class="topbar-actions">
         <button class="btn btn-sm" onclick="openSearchQuick()">🔎 Cari</button>
-        <button class="btn btn-sm btn-g" onclick="openM('mtx')">+ Catat</button>
+        <button class="btn btn-sm btn-b" onclick="openQuickTx('transfer')">⇄ Transfer</button>
+        <button class="btn btn-sm btn-g" onclick="openQuickTx('expense')">+ Catat</button>
       </div>
     </div>
     <div id="alertbox" class="alert-bar" style="margin:.5rem 1rem 0"></div>
@@ -245,6 +249,14 @@ input[type=file]{display:none}
       </div>
     </div>
     <div id="page-tx" class="page">
+      <div class="sec-hdr" style="gap:.5rem;flex-wrap:wrap">
+        <div class="sec-title">Transaksi</div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;justify-content:flex-end">
+          <button class="btn btn-sm btn-g" onclick="openQuickTx('expense')">+ Transaksi Baru</button>
+          <button class="btn btn-sm btn-b" onclick="openQuickTx('transfer')">⇄ Transfer</button>
+          <button class="btn btn-sm btn-r" onclick="deleteAllTransactions()">Hapus Semua Transaksi</button>
+        </div>
+      </div>
       <div class="tx-topbar">
         <div class="ptabs">
           <button class="ptab active" onclick="setPeriod('all',this)">Semua</button>
@@ -292,11 +304,17 @@ input[type=file]{display:none}
       <div class="card"><div id="debt-list"></div></div>
     </div>
     <div id="page-wallet" class="page">
-      <div class="sec-hdr"><div class="sec-title">Kelola Dompet</div><button class="btn btn-sm btn-g" onclick="openM('mwallet')">+ Baru</button></div>
+      <div class="sec-hdr" style="gap:.5rem;flex-wrap:wrap">
+        <div class="sec-title">Kelola Dompet</div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;justify-content:flex-end">
+          <button class="btn btn-sm btn-g" onclick="openM('mwallet')">+ Baru</button>
+          <button class="btn btn-sm btn-r" onclick="deleteAllWallets()">Reset Semua Data</button>
+        </div>
+      </div>
       <div id="wallet-full"></div>
     </div>
   </div>
-  <button class="fab" onclick="openM('mtx')">+</button>
+  <button class="fab" onclick="openQuickTx('expense')">+</button>
   <nav class="bottomnav">
     <button class="bnav-item active" data-page="home"><span class="bnav-icon">🏠</span>Beranda</button>
     <button class="bnav-item" data-page="tx"><span class="bnav-icon">↕️</span>Transaksi</button>
@@ -489,7 +507,7 @@ async function loadAll(){
   try{
     const[ws,txs,bgs,bls,dbs]=await Promise.all([
       dbG('wallets?order=created_at.asc'),
-      dbG('transactions?order=date.desc,created_at.desc&limit=500'),
+      dbG('transactions?order=date.desc,created_at.desc'),
       dbG('budgets?order=created_at.asc'),
       dbG('bills?order=created_at.asc'),
       dbG('debts?order=created_at.asc'),
@@ -1026,6 +1044,19 @@ function openEditWallet(id){
   document.getElementById('mwallet').classList.add('open');
 }
 
+function openQuickTx(type='expense'){
+  openM('mtx');
+  setTxType(type);
+  if(selWallet!=='all'){
+    const wid=document.getElementById('tx-wid');
+    if(wid) wid.value=selWallet;
+  }
+  if(type==='transfer'){
+    const desc=document.getElementById('tx-desc');
+    if(desc && !desc.value) desc.value='Transfer';
+  }
+}
+
 function closeM(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 
@@ -1063,17 +1094,42 @@ async function saveWallet(){
 }
 
 async function delW(id){
-  if(wallets.filter(w=>!w.parentId).length<=1&&!wById(id)?.parentId){alert2('Minimal 1 dompet utama','err');return;}
+  const target=wById(id);
+  if(!target)return;
+  const ids=[id,...wallets.filter(w=>w.parentId===id).map(w=>w.id)];
+  const relatedTx=transactions.filter(t=>ids.includes(t.walletId)||ids.includes(t.toWalletId));
+  const msg=ids.length>1
+    ?`Hapus dompet ${target.name} beserta ${ids.length-1} sub-dompet, ${relatedTx.length} transaksi, dan tagihan terkait?`
+    :`Hapus dompet ${target.name} beserta ${relatedTx.length} transaksi dan tagihan terkait?`;
+  if(!confirm(msg))return;
   setSS('sync');
   try{
-    const kids=wallets.filter(w=>w.parentId===id);
-    for(const k of kids)await dbD(`wallets?id=eq.${k.id}`);
-    await dbD(`wallets?id=eq.${id}`);
-    wallets=wallets.filter(w=>w.id!==id&&w.parentId!==id);
-    transactions=transactions.filter(t=>t.walletId!==id&&t.toWalletId!==id);
-    if(selWallet===id)selWallet='all';
-    setSS('ok');renderAll();
-  }catch(e){setSS('err');alert2('Gagal hapus','err');}
+    // Balik efek transfer yang menyentuh dompet lain agar saldo dompet yang tersisa tetap akurat.
+    const affected=new Map();
+    relatedTx.forEach(t=>{
+      if(t.type!=='transfer')return;
+      const fromDeleted=ids.includes(t.walletId);
+      const toDeleted=ids.includes(t.toWalletId);
+      if(fromDeleted&&!toDeleted&&t.toWalletId){affected.set(t.toWalletId,(affected.get(t.toWalletId)||0)-Number(t.amount||0));}
+      if(!fromDeleted&&toDeleted&&t.walletId){affected.set(t.walletId,(affected.get(t.walletId)||0)+Number(t.amount||0));}
+    });
+    for(const [wid,delta] of affected.entries()){
+      const w=wById(wid);
+      if(w){w.balance=Number(w.balance||0)+delta;await dbU(`wallets?id=eq.${wid}`,{balance:w.balance});}
+    }
+
+    for(const wid of ids){
+      await dbD(`transactions?wallet_id=eq.${wid}`);
+      await dbD(`transactions?to_wallet_id=eq.${wid}`);
+      await dbD(`bills?wallet_id=eq.${wid}`);
+      await dbD(`wallets?id=eq.${wid}`);
+    }
+    wallets=wallets.filter(w=>!ids.includes(w.id));
+    transactions=transactions.filter(t=>!ids.includes(t.walletId)&&!ids.includes(t.toWalletId));
+    bills=bills.filter(b=>!ids.includes(b.walletId));
+    if(ids.includes(selWallet))selWallet='all';
+    setSS('ok');renderAll();alert2('Dompet dan data terkait berhasil dihapus. Saldo dompet lain disesuaikan.','ok');
+  }catch(e){setSS('err');alert2('Gagal hapus dompet: '+e.message,'err');}
 }
 
 function fillWSelects(){
@@ -1121,6 +1177,7 @@ async function saveTx(){
   const towid=type==='transfer'?document.getElementById('tx-towid').value:'';
   if(!amt||!date||!wid){alert2('Lengkapi jumlah, tanggal, dan dompet','err');return;}
   if(type==='transfer'&&!towid){alert2('Pilih dompet tujuan','err');return;}
+  if(type==='transfer'&&towid===wid){alert2('Dompet asal dan tujuan tidak boleh sama','err');return;}
   const w=wById(wid),wt2=towid?wById(towid):null;
   const id='t'+uid();
   let nb=w?w.balance:0,nbt=wt2?wt2.balance:0;
@@ -1210,6 +1267,7 @@ async function saveEditTx(){
 
   if(!newAmt||!newDate||!newWid){alert2('Lengkapi jumlah, tanggal, dan dompet','err');return;}
   if(newType==='transfer'&&!newTowid){alert2('Pilih dompet tujuan','err');return;}
+  if(newType==='transfer'&&newTowid===newWid){alert2('Dompet asal dan tujuan tidak boleh sama','err');return;}
 
   setSS('sync');
   try{
@@ -1264,6 +1322,42 @@ async function delTx(id){
     transactions=transactions.filter(x=>x.id!==id);
     setSS('ok');renderAll();
   }catch(e){setSS('err');alert2('Gagal hapus','err');}
+}
+
+
+// ════════════════════════════════════════
+// BULK DELETE
+// ════════════════════════════════════════
+async function deleteAllTransactions(){
+  if(!transactions.length){alert2('Tidak ada transaksi untuk dihapus','warn');return;}
+  const typed=prompt('Ketik HAPUS TRANSAKSI untuk menghapus semua transaksi dan mereset saldo semua dompet ke 0.');
+  if(typed!=='HAPUS TRANSAKSI')return;
+  setSS('sync');
+  try{
+    await dbD('transactions?id=not.is.null');
+    const patches=wallets.map(w=>dbU(`wallets?id=eq.${w.id}`,{balance:0}));
+    await Promise.all(patches);
+    transactions=[];
+    wallets=wallets.map(w=>({...w,balance:0}));
+    setSS('ok');renderAll();alert2('Semua transaksi dihapus dan saldo dompet direset ke 0','ok');
+  }catch(e){setSS('err');alert2('Gagal hapus semua transaksi: '+e.message,'err');}
+}
+
+async function deleteAllWallets(){
+  const hasData=wallets.length||transactions.length||budgets.length||bills.length||debts.length;
+  if(!hasData){alert2('Tidak ada data untuk dihapus','warn');return;}
+  const typed=prompt('Ketik RESET SEMUA untuk menghapus semua dompet, transaksi, anggaran, tagihan, hutang/piutang, dan data terkait.');
+  if(typed!=='RESET SEMUA')return;
+  setSS('sync');
+  try{
+    await dbD('transactions?id=not.is.null');
+    await dbD('budgets?id=not.is.null');
+    await dbD('bills?id=not.is.null');
+    await dbD('debts?id=not.is.null');
+    await dbD('wallets?id=not.is.null');
+    wallets=[];transactions=[];budgets=[];bills=[];debts=[];selWallet='all';
+    setSS('ok');renderAll();alert2('Semua data aplikasi berhasil dihapus','ok');
+  }catch(e){setSS('err');alert2('Gagal hapus semua data: '+e.message,'err');}
 }
 
 // ════════════════════════════════════════
