@@ -153,6 +153,10 @@ input:checked+.tsl:before{transform:translateX(16px)}
 .cpick div:hover{transform:scale(1.1)}.cpick div.picked{border-color:var(--text)}
 .sep{height:.5px;background:var(--bd);margin:.625rem 0}
 .hint{font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:.5rem}
+.wallet-balance-hint{font-size:11px;color:var(--text2);background:var(--bg2);border:.5px solid var(--bd);border-radius:9px;padding:7px 9px;margin:-.25rem 0 .625rem;line-height:1.45}
+.wallet-balance-hint strong{color:var(--text)}
+.wallet-balance-hint .after{color:var(--green);font-weight:700}
+.wallet-balance-hint .after.neg{color:var(--red)}
 input[type=file]{display:none}
 .alert-bar{font-size:13px;padding:10px 14px;border-radius:var(--r);margin-bottom:.75rem;display:none}
 .aok{background:var(--gl);color:var(--gt)}.aerr{background:var(--rl2);color:var(--rt)}.awarn{background:var(--al);color:var(--at)}
@@ -371,9 +375,11 @@ html[data-theme="dark"] input[type="date"]{color-scheme:dark}
     <button class="ptab active" id="tt-expense" onclick="setTxType('expense')">Pengeluaran</button>
     <button class="ptab" id="tt-transfer" onclick="setTxType('transfer')">Transfer</button>
   </div>
-  <div class="form-row"><input type="number" id="tx-amt" placeholder="0" style="font-size:26px;font-weight:700;border:none;background:transparent;text-align:center;flex:1;padding:.25rem 0" inputmode="decimal"></div>
-  <div class="form-row"><input type="date" id="tx-date"><select id="tx-wid"></select></div>
-  <div id="tx-towid-row" class="form-row" style="display:none"><select id="tx-towid" style="flex:1"></select></div>
+  <div class="form-row"><input type="number" id="tx-amt" placeholder="0" style="font-size:26px;font-weight:700;border:none;background:transparent;text-align:center;flex:1;padding:.25rem 0" inputmode="decimal" oninput="updateTxWalletBalanceHints()"></div>
+  <div class="form-row"><input type="date" id="tx-date"><select id="tx-wid" onchange="updateTxWalletBalanceHints()"></select></div>
+  <div class="wallet-balance-hint" id="tx-wid-balance">Pilih dompet untuk melihat saldo.</div>
+  <div id="tx-towid-row" class="form-row" style="display:none"><select id="tx-towid" style="flex:1" onchange="updateTxWalletBalanceHints()"></select></div>
+  <div class="wallet-balance-hint" id="tx-towid-balance" style="display:none">Pilih dompet tujuan untuk melihat saldo.</div>
   <div class="form-row"><input type="text" id="tx-desc" placeholder="Keterangan (opsional)"></div>
   <div id="tx-cat-section"><div class="flbl">Kategori</div><div class="cat-grid" id="tx-cat-grid"></div><input type="hidden" id="tx-cat"></div>
   <div class="modal-foot"><button class="btn" onclick="closeM('mtx')">Batal</button><button class="btn btn-g" onclick="saveTx()">Simpan</button></div>
@@ -1182,6 +1188,7 @@ function openQuickTx(type='expense'){
     const desc=document.getElementById('tx-desc');
     if(desc && !desc.value) desc.value='Transfer';
   }
+  updateTxWalletBalanceHints();
 }
 
 // Alias yang dipakai tombol kartu dompet di dashboard.
@@ -1326,13 +1333,68 @@ async function delW(id,opts={}){
   }catch(e){setSS('err');alert2('Gagal hapus dompet: '+e.message,'err');}
 }
 
+function walletOptionLabel(w,{showBalance=false}={}){
+  const prefix=w.parentId?'↳ ':'';
+  const hidden=w.hidden?' [sembunyi]':'';
+  const bal=showBalance?` — ${fmt(w.balance||0)}`:'';
+  return `${prefix}${w.name}${bal}${hidden}`;
+}
+
+function walletOptionsHTML({showBalance=false}={}){
+  return '<option value="">— Pilih dompet —</option>'+wallets.map(w=>`<option value="${w.id}">${walletOptionLabel(w,{showBalance})}</option>`).join('');
+}
+
+function walletProjectedBalance(type,balance,amount,isDestination=false){
+  const amt=Number(amount)||0;
+  const bal=Number(balance)||0;
+  if(!amt)return null;
+  if(type==='income')return isDestination?null:bal+amt;
+  if(type==='expense')return isDestination?null:bal-amt;
+  if(type==='transfer')return isDestination?bal+amt:bal-amt;
+  return null;
+}
+
+function renderWalletBalanceHint(el,w,{type=selTxType,amount=0,isDestination=false,emptyText='Pilih dompet untuk melihat saldo.'}={}){
+  if(!el)return;
+  if(!w){el.innerHTML=emptyText;return;}
+  const current=Number(w.balance)||0;
+  const projected=walletProjectedBalance(type,current,amount,isDestination);
+  let html=`<strong>${w.name}</strong> · Saldo sekarang: <strong>${fmt(current)}</strong>`;
+  if(projected!==null){
+    html+=` · Setelah transaksi: <span class="after${projected<0?' neg':''}">${fmt(projected)}</span>`;
+  }
+  el.innerHTML=html;
+}
+
+function updateTxWalletBalanceHints(){
+  const amount=parseFloat(document.getElementById('tx-amt')?.value)||0;
+  const wid=document.getElementById('tx-wid')?.value||'';
+  const towid=document.getElementById('tx-towid')?.value||'';
+  const srcHint=document.getElementById('tx-wid-balance');
+  const toHint=document.getElementById('tx-towid-balance');
+  renderWalletBalanceHint(srcHint,wById(wid),{type:selTxType,amount,emptyText:'Pilih dompet untuk melihat saldo.'});
+  if(toHint){
+    if(selTxType==='transfer'){
+      toHint.style.display='block';
+      renderWalletBalanceHint(toHint,wById(towid),{type:selTxType,amount,isDestination:true,emptyText:'Pilih dompet tujuan untuk melihat saldo.'});
+    }else{
+      toHint.style.display='none';
+    }
+  }
+}
+
 function fillWSelects(){
-  ['tx-wid','tx-towid','bill-wid','imp-wid'].forEach(sid=>{
+  ['tx-wid','tx-towid'].forEach(sid=>{
     const el=document.getElementById(sid);if(!el)return;
-    el.innerHTML='<option value="">— Pilih dompet —</option>'+wallets.map(w=>`<option value="${w.id}">${w.parentId?'↳ ':''}${w.name}${w.hidden?' [sembunyi]':''}</option>`).join('');
+    el.innerHTML=walletOptionsHTML({showBalance:true});
+  });
+  ['bill-wid','imp-wid'].forEach(sid=>{
+    const el=document.getElementById(sid);if(!el)return;
+    el.innerHTML=walletOptionsHTML();
   });
   const fw=document.getElementById('f-wallet');
   if(fw){fw.innerHTML='<option value="all">Semua dompet</option>'+wallets.map(w=>`<option value="${w.id}">${w.name}</option>`).join('');fw.value=selWallet==='all'?'all':selWallet;}
+  updateTxWalletBalanceHints();
 }
 
 // ════════════════════════════════════════
@@ -1349,6 +1411,7 @@ function setTxType(type){
   if(toRow)toRow.style.display=type==='transfer'?'flex':'none';
   if(catSec)catSec.style.display=type==='transfer'?'none':'block';
   if(type!=='transfer')renderCatGrid();
+  updateTxWalletBalanceHints();
 }
 
 function renderCatGrid(){
@@ -1413,7 +1476,7 @@ function openEditTx(id){
   const wSels=['etx-wid','etx-towid'];
   wSels.forEach(sid=>{
     const el=document.getElementById(sid);if(!el)return;
-    el.innerHTML='<option value="">— Pilih dompet —</option>'+wallets.map(w=>`<option value="${w.id}">${w.parentId?'↳ ':''}${w.name}${w.hidden?' [sembunyi]':''}</option>`).join('');
+    el.innerHTML=walletOptionsHTML({showBalance:true});
   });
   document.getElementById('etx-wid').value=t.walletId||'';
   document.getElementById('etx-towid').value=t.toWalletId||'';
