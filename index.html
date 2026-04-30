@@ -4,41 +4,43 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Dompetku</title>
+<script>
+(function(){
+  try{
+    const saved=localStorage.getItem('dompetku-theme');
+    document.documentElement.dataset.theme=saved==='dark'?'dark':'light';
+  }catch(e){document.documentElement.dataset.theme='light';}
+})();
+</script>
 <style>
 :root{
-  color-scheme:light dark;
-  --bg:#fff;--bg2:#f7f7f6;--bg3:#f0ede8;
-  --text:#111;--text2:#6b7280;--text3:#aaa;
-  --bd:rgba(0,0,0,0.08);--bd2:rgba(0,0,0,0.15);
+  color-scheme:light;
+  --bg:#ffffff;--bg2:#f8fafc;--bg3:#f3f6f8;
+  --text:#111827;--text2:#6b7280;--text3:#9ca3af;
+  --bd:rgba(17,24,39,0.08);--bd2:rgba(17,24,39,0.16);
   --r:8px;--rl:12px;--rxl:16px;
-  --green:#1D9E75;--gd:#0F6E56;--gl:#E1F5EE;--gt:#085041;
-  --blue:#378ADD;--bld:#185FA5;--bl:#E6F1FB;--blt:#0C447C;
-  --red:#D85A30;--rl2:#FAECE7;--rt:#4A1B0C;
-  --amber:#BA7517;--al:#FAEEDA;--at:#412402;
-  --gray:#888780;--grl:#F1EFE8;--grt:#444441;
+  --green:#1D9E75;--gd:#0F6E56;--gl:#EAF7F2;--gt:#075845;
+  --blue:#378ADD;--bld:#185FA5;--bl:#EFF6FF;--blt:#0C447C;
+  --red:#D85A30;--rl2:#FFF1EC;--rt:#7A2E15;
+  --amber:#BA7517;--al:#FFF7E6;--at:#6B3F05;
+  --gray:#8B8F98;--grl:#F3F4F6;--grt:#4B5563;
+  --pagebg:#f6f8fb;--surface:#ffffff;--surface-muted:#fbfdff;
+  --shadow:0 1px 2px rgba(17,24,39,.04);--iconbg:#ffffff;
+  --overlay-bg:rgba(0,0,0,.4);--scroll:#cbd5e1;
 }
-@media(prefers-color-scheme:dark){:root{
-  color-scheme:light dark;
-  --bg:#1c1c1e;--bg2:#2c2c2e;--bg3:#3a3a3c;
-  --text:#f2f2f7;--text2:#aeaeb2;--text3:#636366;
-  --bd:rgba(255,255,255,0.08);--bd2:rgba(255,255,255,0.16);
-  --gl:#0a2e1f;--gt:#9FE1CB;--bl:#0a1f35;--blt:#85B7EB;
-  --rl2:#2e1208;--rt:#F0997B;--al:#2e1e00;--at:#FAC775;
-  --grl:#2c2c2e;--grt:#B4B2A9;
-}}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:radial-gradient(circle at top, color-mix(in srgb, var(--bg2) 65%, transparent), transparent 42%), var(--bg3);color:var(--text);min-height:100vh;font-size:14px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--pagebg);color:var(--text);min-height:100vh;font-size:14px}
 button{font-family:inherit;cursor:pointer}
 .app{display:flex;flex-direction:column;min-height:100vh;max-width:520px;margin:0 auto;background:var(--bg)}
 @media(min-width:768px){.app{max-width:100%;flex-direction:row}}
-.sidebar{display:none;width:220px;flex-shrink:0;background:var(--bg2);border-right:.5px solid var(--bd);padding:1.5rem 0;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sidebar{display:none;width:220px;flex-shrink:0;background:#fff;border-right:.5px solid var(--bd);padding:1.5rem 0;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto}
 @media(min-width:768px){.sidebar{display:flex}}
 .sidebar-logo{font-size:20px;font-weight:700;padding:0 1.25rem 1.25rem;letter-spacing:-.5px}
 .sidebar-logo span{color:var(--green)}
 .nav-item{display:flex;align-items:center;gap:10px;padding:10px 1.25rem;font-size:13px;color:var(--text2);border:none;background:transparent;width:100%;text-align:left;cursor:pointer;transition:background .15s,color .15s}
-.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item:hover{background:var(--bg2);color:var(--text)}
 .nav-item.active{color:var(--green);background:var(--gl);font-weight:500}
-.nav-icon{font-size:15px;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;text-align:center;background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.04));box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 6px 14px rgba(0,0,0,.18);border:.5px solid var(--bd)}
+.nav-icon{font-size:15px;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;text-align:center;background:#fff;box-shadow:0 1px 3px rgba(17,24,39,.06);border:.5px solid var(--bd)}
 .sync-info{display:flex;align-items:center;gap:8px;padding:10px 1.25rem;font-size:12px;color:var(--text3)}
 .sdot{width:8px;height:8px;border-radius:50%;background:var(--gray);flex-shrink:0}
 .sdot.ok{background:var(--green)}.sdot.err{background:var(--red)}.sdot.sync{background:var(--amber);animation:blink 1s infinite}
@@ -56,8 +58,8 @@ button{font-family:inherit;cursor:pointer}
 @media(min-width:768px){.bottomnav{display:none}}
 .bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:.25rem;border:none;background:transparent;color:var(--text3);font-size:10px;font-weight:500}
 .bnav-item.active{color:var(--green)}
-.bnav-icon{font-size:18px;line-height:1.2;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.04));box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 6px 14px rgba(0,0,0,.16);border:.5px solid var(--bd)}
-.card{background:var(--bg);border:.5px solid var(--bd);border-radius:var(--rl);padding:.875rem 1rem;margin-bottom:.75rem}
+.bnav-icon{font-size:18px;line-height:1.2;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:12px;background:#fff;box-shadow:0 1px 3px rgba(17,24,39,.06);border:.5px solid var(--bd)}
+.card{background:#fff;border:.5px solid var(--bd);border-radius:var(--rl);padding:.875rem 1rem;margin-bottom:.75rem;box-shadow:0 1px 2px rgba(17,24,39,.04)}
 .card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}
 .card-title{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em}
 .btn{font-size:13px;padding:7px 14px;border-radius:var(--r);border:.5px solid var(--bd2);background:var(--bg);color:var(--text);cursor:pointer;font-family:inherit;transition:background .15s}
@@ -70,13 +72,13 @@ button{font-family:inherit;cursor:pointer}
 .fab{position:fixed;bottom:calc(62px + env(safe-area-inset-bottom));right:1rem;width:52px;height:52px;border-radius:50%;background:var(--green);color:#fff;border:none;font-size:26px;display:flex;align-items:center;justify-content:center;z-index:20;box-shadow:0 3px 12px rgba(29,158,117,.4)}
 @media(min-width:768px){.fab{display:none}}
 .metrics{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.75rem}
-.metric{background:var(--bg2);border-radius:var(--r);padding:.75rem}
+.metric{background:#fff;border:.5px solid var(--bd);border-radius:var(--r);padding:.75rem;box-shadow:0 1px 2px rgba(17,24,39,.04)}
 .metric-lbl{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
 .metric-val{font-size:17px;font-weight:700}
 .w-strip{display:flex;gap:.5rem;overflow-x:auto;padding-bottom:4px;margin-bottom:.75rem;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .w-strip::-webkit-scrollbar{height:0}
-.wcard{min-width:120px;flex-shrink:0;border-radius:var(--rl);border:1.5px solid var(--bd);padding:.75rem;cursor:pointer;background:var(--bg);transition:border-color .15s;position:relative}
-.wcard.sel{border-color:var(--wc,var(--green));background:var(--bg2)}
+.wcard{min-width:120px;flex-shrink:0;border-radius:var(--rl);border:1.5px solid var(--bd);padding:.75rem;cursor:pointer;background:#fff;transition:border-color .15s,background .15s;position:relative;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+.wcard.sel{border-color:var(--wc,var(--green));background:#fbfdff}
 .wdot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;margin-bottom:6px}
 .wname{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
 .wbal{font-size:13px;font-weight:700}
@@ -99,7 +101,7 @@ button{font-family:inherit;cursor:pointer}
 #recent-tx{max-height:520px}
 #tx-list{max-height:68vh}
 #inspect-tx::-webkit-scrollbar,#recent-tx::-webkit-scrollbar,#tx-list::-webkit-scrollbar{width:8px;height:8px}
-#inspect-tx::-webkit-scrollbar-thumb,#recent-tx::-webkit-scrollbar-thumb,#tx-list::-webkit-scrollbar-thumb{background:#2a2f3b;border-radius:999px}
+#inspect-tx::-webkit-scrollbar-thumb,#recent-tx::-webkit-scrollbar-thumb,#tx-list::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:999px}
 .tx-topbar{display:flex;flex-direction:column;gap:.75rem;margin-bottom:.75rem}
 .tx-filters{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:.5rem}
 .search-input{font-size:12px;padding:9px 10px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--bg);color:var(--text);width:100%}
@@ -175,6 +177,34 @@ input[type=file]{display:none}
 .cat-avt{width:34px;height:34px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
 .chart-box{position:relative;height:180px;margin-bottom:.75rem}
 .due-soon{color:var(--amber)}.due-over{color:var(--red)}
+
+.theme-switch{display:flex;margin:0 1.25rem 1rem;padding:3px;background:var(--bg2);border:.5px solid var(--bd);border-radius:999px;gap:3px}
+.theme-btn{flex:1;border:none;background:transparent;color:var(--text2);border-radius:999px;padding:6px 8px;font-size:11px;font-weight:700;cursor:pointer}
+.theme-btn.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+.theme-mini{width:31px;height:31px;padding:0;border-radius:999px;display:inline-flex;align-items:center;justify-content:center}
+html[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#15171b;--bg2:#1d2128;--bg3:#252b33;
+  --text:#f4f7fb;--text2:#a7b0bd;--text3:#6f7a88;
+  --bd:rgba(255,255,255,0.10);--bd2:rgba(255,255,255,0.18);
+  --green:#27B98B;--gd:#178463;--gl:#0a2d24;--gt:#A4EBD5;
+  --blue:#5AA6F2;--bld:#2C79C9;--bl:#0c2742;--blt:#A8D1FF;
+  --red:#F0714A;--rl2:#34170d;--rt:#FFB199;
+  --amber:#E1A33C;--al:#33230a;--at:#FFD792;
+  --gray:#8B93A1;--grl:#242933;--grt:#CBD5E1;
+  --pagebg:#0f1115;--surface:#171a20;--surface-muted:#1b2028;
+  --shadow:0 1px 2px rgba(0,0,0,.35);--iconbg:#1e232b;
+  --overlay-bg:rgba(0,0,0,.58);--scroll:#4b5563;
+}
+.app,.sidebar,.topbar,.bottomnav{background:var(--bg)}
+.card,.metric,.wcard{background:var(--surface);box-shadow:var(--shadow)}
+.nav-icon,.bnav-icon{background:var(--iconbg);box-shadow:var(--shadow)}
+.wcard.sel{background:var(--surface-muted)}
+.overlay{background:var(--overlay-bg)}
+#inspect-tx::-webkit-scrollbar-thumb,#recent-tx::-webkit-scrollbar-thumb,#tx-list::-webkit-scrollbar-thumb{background:var(--scroll)}
+html[data-theme="dark"] .modal{box-shadow:0 18px 50px rgba(0,0,0,.45)}
+html[data-theme="dark"] input[type="date"]{color-scheme:dark}
+
 </style>
 </head>
 <body>
@@ -182,6 +212,10 @@ input[type=file]{display:none}
   <!-- Sidebar desktop -->
   <nav class="sidebar">
     <div class="sidebar-logo">Dompet<span>ku</span></div>
+    <div class="theme-switch" aria-label="Pilih tema tampilan">
+      <button class="theme-btn" data-theme-option="light" onclick="setTheme('light')">☀️ Putih</button>
+      <button class="theme-btn" data-theme-option="dark" onclick="setTheme('dark')">🌙 Dark</button>
+    </div>
     <button class="nav-item active" data-page="home"><span class="nav-icon">🏠</span>Beranda</button>
     <button class="nav-item" data-page="tx"><span class="nav-icon">↕️</span>Transaksi</button>
     <button class="nav-item" data-page="budget"><span class="nav-icon">🎯</span>Anggaran</button>
@@ -194,7 +228,8 @@ input[type=file]{display:none}
     <button class="nav-item" onclick="resetAllData()"><span class="nav-icon">🧨</span>Reset Semua Data</button>
     <div style="flex:1"></div>
     <button class="nav-item" onclick="document.getElementById('fi').click()"><span class="nav-icon">📥</span>Import Excel/CSV</button>
-    <button class="nav-item" onclick="exportCSV()"><span class="nav-icon">📤</span>Export CSV</button>
+    <button class="nav-item" onclick="downloadImportTemplate()"><span class="nav-icon">📄</span>Template Import</button>
+    <button class="nav-item" onclick="exportCSV()"><span class="nav-icon">📤</span>Export Data CSV</button>
     <div class="sync-info"><span class="sdot" id="sdot"></span><span id="slbl">Memuat...</span></div>
   </nav>
   <!-- Main -->
@@ -202,6 +237,7 @@ input[type=file]{display:none}
     <div class="topbar">
       <div class="topbar-logo">Dompet<span>ku</span></div>
       <div class="topbar-actions">
+        <button class="btn btn-sm theme-mini" id="theme-mini" onclick="toggleTheme()" title="Ganti tema">🌙</button>
         <button class="btn btn-sm" onclick="openSearchQuick()">🔎 Cari</button>
         <button class="btn btn-sm btn-b" onclick="openQuickTx('transfer')">⇄ Transfer</button>
         <button class="btn btn-sm btn-g" onclick="openQuickTx('expense')">+ Catat</button>
@@ -349,11 +385,13 @@ input[type=file]{display:none}
   <div class="modal-title" id="mw-title">Tambah Dompet</div>
   <input type="hidden" id="w-id">
   <input type="hidden" id="w-pid">
+  <input type="hidden" id="w-old-bal">
   <div class="form-row"><input type="text" id="w-name" placeholder="Nama dompet"></div>
   <div class="form-row">
     <select id="w-type"><option value="cash">Tunai</option><option value="bank">Bank</option><option value="ewallet">E-wallet</option><option value="savings">Tabungan</option><option value="investment">Investasi</option></select>
   </div>
-  <div id="w-bal-row" class="form-row"><input type="number" id="w-bal" placeholder="Saldo awal (hanya untuk dompet baru)" min="0"></div>
+  <div id="w-bal-row" class="form-row"><input type="number" id="w-bal" placeholder="Saldo dompet" inputmode="decimal"></div>
+  <div class="hint" id="w-bal-hint">Saldo awal akan dicatat sebagai transaksi awal. Saat edit, perubahan saldo akan dicatat sebagai transaksi penyesuaian.</div>
   <div class="form-row" style="align-items:center"><span class="flbl" style="margin:0 6px 0 0">Warna:</span><div class="cpick" id="cpick"></div></div>
   <div class="sep"></div>
   <div class="toggle-row"><label class="toggle"><input type="checkbox" id="w-hid"><span class="tsl"></span></label><span style="font-size:13px;color:var(--text2)">Sembunyikan dari total saldo</span></div>
@@ -502,6 +540,40 @@ function setSS(s,msg){
   const d=document.getElementById('sdot'),l=document.getElementById('slbl');
   if(d)d.className='sdot '+s;
   if(l)l.textContent=msg||{ok:'Tersinkron',err:'Gagal sinkron',sync:'Menyinkron...'}[s]||'';
+}
+
+function getTheme(){
+  return document.documentElement.dataset.theme==='dark'?'dark':'light';
+}
+
+function setTheme(theme){
+  const next=theme==='dark'?'dark':'light';
+  document.documentElement.dataset.theme=next;
+  try{localStorage.setItem('dompetku-theme',next);}catch(e){}
+  updateThemeUI();
+  if(document.getElementById('page-report')?.classList.contains('active')) renderReport();
+}
+
+function toggleTheme(){
+  setTheme(getTheme()==='dark'?'light':'dark');
+}
+
+function updateThemeUI(){
+  const current=getTheme();
+  document.querySelectorAll('[data-theme-option]').forEach(btn=>{
+    btn.classList.toggle('active',btn.dataset.themeOption===current);
+  });
+  const mini=document.getElementById('theme-mini');
+  if(mini){
+    mini.textContent=current==='dark'?'☀️':'🌙';
+    mini.title=current==='dark'?'Ganti ke clean putih':'Ganti ke dark mode';
+  }
+}
+
+function initTheme(){
+  const current=getTheme();
+  document.documentElement.dataset.theme=current;
+  updateThemeUI();
 }
 
 async function loadAll(){
@@ -1043,6 +1115,10 @@ function openM(id){
     document.getElementById('w-name').value='';
     document.getElementById('w-type').value='cash';
     document.getElementById('w-bal').value='';
+    document.getElementById('w-old-bal').value='0';
+    document.getElementById('w-bal').placeholder='Saldo awal';
+    const wBalHint=document.getElementById('w-bal-hint');
+    if(wBalHint) wBalHint.textContent='Saldo awal akan muncul sebagai transaksi "Saldo awal" supaya riwayat tetap konsisten.';
     document.getElementById('w-hid').checked=false;
     document.getElementById('w-bal-row').style.display='';
     document.getElementById('mw-title').textContent='Tambah Dompet';
@@ -1060,8 +1136,12 @@ function openEditWallet(id){
   document.getElementById('w-pid').value=w.parentId||'';
   document.getElementById('w-name').value=w.name;
   document.getElementById('w-type').value=w.type;
-  document.getElementById('w-bal').value='';
-  document.getElementById('w-bal-row').style.display='none'; // hide saldo awal saat edit
+  document.getElementById('w-bal').value=Number(w.balance||0);
+  document.getElementById('w-old-bal').value=Number(w.balance||0);
+  document.getElementById('w-bal').placeholder='Saldo saat ini';
+  document.getElementById('w-bal-row').style.display='';
+  const wBalHint=document.getElementById('w-bal-hint');
+  if(wBalHint) wBalHint.textContent='Kalau saldo diubah, aplikasi otomatis membuat transaksi "Penyesuaian saldo" sebesar selisihnya.';
   document.getElementById('w-hid').checked=w.hidden;
   document.getElementById('mw-title').textContent='Edit Dompet';
   document.getElementById('mw-save-btn').textContent='Update';
@@ -1117,6 +1197,14 @@ function buildCP(){
 }
 function pickC(el,c){document.querySelectorAll('#cpick div').forEach(d=>d.classList.remove('picked'));el.classList.add('picked');selColor=c;}
 
+function makeBalanceTx({walletId,amount,type,desc,date=todayStr()}){
+  const txId='t'+uid();
+  return {
+    local:{id:txId,date,desc,type,amount,cat:'other',walletId,toWalletId:null},
+    remote:{id:txId,date,description:desc,type,amount,cat:'other',wallet_id:walletId,to_wallet_id:null}
+  };
+}
+
 async function saveWallet(){
   const name=document.getElementById('w-name').value.trim();
   if(!name){alert2('Masukkan nama dompet','err');return;}
@@ -1124,22 +1212,52 @@ async function saveWallet(){
   const hidden=document.getElementById('w-hid').checked;
   const pid=document.getElementById('w-pid').value||null;
   const editId=document.getElementById('w-id').value;
+  const rawBal=document.getElementById('w-bal').value;
 
   setSS('sync');
   try{
     if(editId){
       // ── EDIT MODE ──
-      await dbU(`wallets?id=eq.${editId}`,{name,type,color:selColor,hidden,parent_id:pid});
       const w=wById(editId);
-      if(w){w.name=name;w.type=type;w.color=selColor;w.hidden=hidden;w.parentId=pid;}
-      closeM('mwallet');setSS('ok');renderAll();alert2('Dompet berhasil diupdate','ok');
+      if(!w){throw new Error('Dompet tidak ditemukan');}
+      const oldBal=Number(w.balance)||0;
+      const newBal=rawBal===''?oldBal:(parseFloat(rawBal)||0);
+      const diff=Number((newBal-oldBal).toFixed(2));
+      const adjustment=Math.abs(diff)>0.000001
+        ? makeBalanceTx({
+            walletId:editId,
+            amount:Math.abs(diff),
+            type:diff>0?'income':'expense',
+            desc:`Penyesuaian saldo - ${name}`
+          })
+        : null;
+
+      await dbU(`wallets?id=eq.${editId}`,{name,type,color:selColor,hidden,parent_id:pid,balance:newBal});
+      if(adjustment) await dbP('transactions',adjustment.remote);
+
+      w.name=name;w.type=type;w.color=selColor;w.hidden=hidden;w.parentId=pid;w.balance=newBal;
+      if(adjustment) transactions.unshift(adjustment.local);
+      closeM('mwallet');setSS('ok');renderAll();
+      alert2(adjustment?'Dompet diupdate dan transaksi penyesuaian saldo dibuat':'Dompet berhasil diupdate','ok');
     } else {
       // ── ADD MODE ──
-      const bal=parseFloat(document.getElementById('w-bal').value)||0;
+      const bal=parseFloat(rawBal)||0;
       const id='w'+uid();
+      const initial=Math.abs(bal)>0.000001
+        ? makeBalanceTx({
+            walletId:id,
+            amount:Math.abs(bal),
+            type:bal>0?'income':'expense',
+            desc:`Saldo awal - ${name}`
+          })
+        : null;
+
       await dbP('wallets',{id,name,type,color:selColor,balance:bal,hidden,parent_id:pid,envelopes:[]});
+      if(initial) await dbP('transactions',initial.remote);
+
       wallets.push({id,name,type,color:selColor,balance:bal,hidden,parentId:pid,envelopes:[]});
-      closeM('mwallet');setSS('ok');renderAll();alert2('Dompet ditambahkan','ok');
+      if(initial) transactions.unshift(initial.local);
+      closeM('mwallet');setSS('ok');renderAll();alert2(initial?'Dompet ditambahkan dan saldo awal dicatat':'Dompet ditambahkan','ok');
     }
   }catch(e){setSS('err');alert2('Gagal: '+e.message,'err');}
 }
@@ -1435,7 +1553,7 @@ function renderReport(){
   }
   const ctx=document.getElementById('main-chart').getContext('2d');
   if(mainChart)mainChart.destroy();
-  const dark=window.matchMedia('(prefers-color-scheme:dark)').matches;
+  const dark=getTheme()==='dark';
   const gc=dark?'rgba(255,255,255,.06)':'rgba(0,0,0,.05)';
   const tc=dark?'rgba(255,255,255,.4)':'rgba(0,0,0,.4)';
   mainChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Pemasukan',data:incD,backgroundColor:'#1D9E75',borderRadius:4,barPercentage:.45},{label:'Pengeluaran',data:expD,backgroundColor:'#D85A30',borderRadius:4,barPercentage:.45}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},color:tc,boxWidth:10,padding:12}}},scales:{x:{grid:{color:gc},ticks:{color:tc,font:{size:11}}},y:{grid:{color:gc},ticks:{color:tc,font:{size:11},callback:v=>fmtK(v)}}}}});
@@ -1458,85 +1576,196 @@ function renderReport(){
 // ════════════════════════════════════════
 // IMPORT / EXPORT
 // ════════════════════════════════════════
-function handleFile(e){
+function csvEscape(v){return '"'+String(v??'').replace(/"/g,'""')+'"';}
+function downloadCSVFile(filename,rows){
+  const csv=rows.map(r=>r.map(csvEscape).join(',')).join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=filename;a.click();
+  URL.revokeObjectURL(url);
+}
+function downloadImportTemplate(){
+  const rows=[
+    ['Tanggal','Deskripsi','Tipe','Jumlah','Kategori','Dompet','Dompet Tujuan'],
+    [todayStr(),'Gaji bulanan','income','5000000','salary','Mandiri',''],
+    [todayStr(),'Makan siang','expense','50000','food','Mandiri',''],
+    [todayStr(),'Pindah ke tabungan','transfer','1000000','other','Mandiri','Tabungan']
+  ];
+  downloadCSVFile('template-import-dompetku.csv',rows);
+  alert2('Template import CSV diunduh','ok');
+}
+function normHeader(v){return String(v||'').toLowerCase().trim().replace(/\s+/g,' ').replace(/[_-]+/g,' ');}
+function findCol(headers,aliases){
+  const norm=headers.map(h=>({raw:h,n:normHeader(h)}));
+  for(const a of aliases){
+    const aa=normHeader(a);
+    const exact=norm.find(h=>h.n===aa);
+    if(exact)return exact.raw;
+  }
+  for(const a of aliases){
+    const aa=normHeader(a);
+    const partial=norm.find(h=>h.n.includes(aa)||aa.includes(h.n));
+    if(partial)return partial.raw;
+  }
+  return '';
+}
+function cell(row,col){return col?String(row[col]??'').trim():'';}
+function parseMoney(v){
+  let s=String(v??'').trim();
+  if(!s)return NaN;
+  const neg=/^\(.*\)$/.test(s)||s.includes('-');
+  s=s.replace(/[()\sRp$]/gi,'');
+  const hasComma=s.includes(','), hasDot=s.includes('.');
+  if(hasComma&&hasDot){
+    const lastComma=s.lastIndexOf(','), lastDot=s.lastIndexOf('.');
+    if(lastComma>lastDot)s=s.replace(/\./g,'').replace(',','.');
+    else s=s.replace(/,/g,'');
+  }else if(hasComma){
+    const parts=s.split(',');
+    if(parts.length===2&&parts[1].length<=2)s=s.replace(',','.');
+    else s=s.replace(/,/g,'');
+  }else if(hasDot){
+    const parts=s.split('.');
+    if(parts.length>2||parts.at(-1).length===3)s=s.replace(/\./g,'');
+  }
+  s=s.replace(/[^0-9.]/g,'');
+  const n=parseFloat(s);
+  return isNaN(n)?NaN:(neg?-Math.abs(n):n);
+}
+function normType(v,amount){
+  const t=String(v||'').toLowerCase();
+  if(t.includes('transfer')||t.includes('pindah')||t.includes('tf'))return 'transfer';
+  if(t.includes('income')||t.includes('masuk')||t.includes('pemasukan')||t.includes('kredit')||t.includes('credit'))return 'income';
+  if(t.includes('expense')||t.includes('keluar')||t.includes('pengeluaran')||t.includes('debit'))return 'expense';
+  return Number(amount)>=0?'income':'expense';
+}
+function normalizeCatValue(v,type){
+  const raw=String(v||'').trim();
+  if(!raw)return type==='income'?'other':'other';
+  const n=raw.toLowerCase();
+  const found=CATS.find(c=>c.id.toLowerCase()===n||c.l.toLowerCase()===n);
+  return found?found.id:raw;
+}
+function findWalletByName(name){
+  const n=String(name||'').trim().toLowerCase();
+  if(!n)return null;
+  return wallets.find(w=>String(w.name||'').trim().toLowerCase()===n)||null;
+}
+async function ensureWalletByName(name,created){
+  const nm=String(name||'').trim()||'Dompet Utama';
+  const existing=findWalletByName(nm);if(existing)return existing;
+  if(created[nm])return created[nm];
+  const id='w'+uid();
+  const color=PAL[wallets.length%PAL.length];
+  const payload={id,name:nm,type:'bank',color,balance:0,hidden:false,parent_id:null,envelopes:[]};
+  await dbP('wallets',payload);
+  const local={id,name:nm,type:'bank',color,balance:0,hidden:false,parentId:null,envelopes:[]};
+  wallets.push(local);created[nm]=local;
+  return local;
+}
+function fallbackWalletName(){
+  if(selWallet!=='all')return wById(selWallet)?.name||'';
+  return wallets[0]?.name||'Dompet Utama';
+}
+function readWorkbookRows(file,ev){
+  const name=file.name.toLowerCase();
+  const wb=name.endsWith('.csv')
+    ? XLSX.read(ev.target.result,{type:'string',raw:false})
+    : XLSX.read(ev.target.result,{type:'binary',raw:false});
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  return XLSX.utils.sheet_to_json(ws,{defval:'',raw:false});
+}
+async function handleFile(e){
   const file=e.target.files[0];if(!file)return;
   const reader=new FileReader();
-  reader.onload=function(ev){
+  reader.onload=async function(ev){
     try{
-      let rows=[];
-      if(file.name.endsWith('.csv')){
-        const lines=ev.target.result.split('\n').map(l=>l.trim()).filter(Boolean);
-        sheetHeaders=lines[0].split(',').map(h=>h.trim().replace(/"/g,''));
-        rows=lines.slice(1).map(l=>{const c=l.split(',');const o={};sheetHeaders.forEach((h,i)=>o[h]=c[i]?.trim().replace(/"/g,'')||'');return o;});
-      }else{
-        const wbx=XLSX.read(ev.target.result,{type:'binary'});
-        const ws=wbx.Sheets[wbx.SheetNames[0]];
-        rows=XLSX.utils.sheet_to_json(ws,{defval:''});
-        sheetHeaders=Object.keys(rows[0]||{});
-      }
-      rawSheet=rows;fillWSelects();
-      const flds=[{k:'date',l:'Tanggal'},{k:'desc',l:'Deskripsi'},{k:'amount',l:'Jumlah'},{k:'type',l:'Tipe'},{k:'cat',l:'Kategori'}];
-      document.getElementById('colmap').innerHTML=flds.map(f=>`<div><label class="flbl">${f.l}</label><select id="map-${f.k}" style="width:100%;font-size:13px;padding:7px 8px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--bg);color:var(--text)"><option value="">— Abaikan —</option>${sheetHeaders.map(h=>`<option value="${h}" ${ag(h,f.k)?'selected':''}>${h}</option>`).join('')}</select></div>`).join('');
-      openM('mcol');
-    }catch(err){alert2('Gagal baca file: '+err.message,'err');}
+      const rows=readWorkbookRows(file,ev);
+      if(!rows.length){alert2('File kosong atau header tidak terbaca','err');return;}
+      await importRowsAuto(rows,file.name);
+    }catch(err){alert2('Gagal import: '+err.message,'err');}
+    finally{e.target.value='';}
   };
-  if(file.name.endsWith('.csv'))reader.readAsText(file);else reader.readAsBinaryString(file);
-  e.target.value='';
+  if(file.name.toLowerCase().endsWith('.csv'))reader.readAsText(file);else reader.readAsBinaryString(file);
 }
-
-function ag(h,f){
-  h=h.toLowerCase();
-  return{date:['tanggal','date','tgl','waktu'],desc:['keterangan','deskripsi','desc','nota','note','nama'],amount:['jumlah','amount','nominal','total','debit','kredit'],type:['tipe','type','jenis'],cat:['kategori','category','cat']}[f]?.some(k=>h.includes(k));
-}
-
-async function applyMap(){
-  const wid=document.getElementById('imp-wid').value;
-  if(!wid){alert2('Pilih dompet','err');return;}
-  const w=wById(wid);
-  const gc=id=>document.getElementById(id)?.value||'';
-  const dc=gc('map-date'),dsc=gc('map-desc'),ac=gc('map-amount'),tc=gc('map-type'),cc=gc('map-cat');
-  if(!dsc||!ac){alert2('Deskripsi & Jumlah wajib dipilih','err');return;}
+async function importRowsAuto(rows,filename){
+  const headers=Object.keys(rows[0]||{});
+  const cDate=findCol(headers,['Tanggal','Date','Tgl','Waktu','Transaction Date']);
+  const cDesc=findCol(headers,['Deskripsi','Keterangan','Desc','Description','Memo','Catatan','Nama']);
+  const cAmount=findCol(headers,['Jumlah','Amount','Nominal','Total','Nilai']);
+  const cDebit=findCol(headers,['Debit','Pengeluaran','Keluar','Expense']);
+  const cCredit=findCol(headers,['Kredit','Credit','Pemasukan','Masuk','Income']);
+  const cType=findCol(headers,['Tipe','Type','Jenis','Transaksi']);
+  const cCat=findCol(headers,['Kategori','Category','Cat']);
+  const cWallet=findCol(headers,['Dompet','Wallet','Account','Rekening','Akun','Sumber','Dompet Asal','Wallet Asal']);
+  const cToWallet=findCol(headers,['Dompet Tujuan','Wallet Tujuan','To Wallet','Tujuan','Rekening Tujuan','Akun Tujuan']);
+  if(!cAmount&&!cDebit&&!cCredit){alert2('Import gagal: kolom Jumlah/Amount atau Debit/Kredit tidak ditemukan','err');return;}
   setSS('sync');
-  let added=0,skipped=0,newBal=w.balance;
+  const created={};
+  const changed=new Map();
   const txRows=[];
-  rawSheet.forEach(row=>{
-    const raw=parseFloat((row[ac]||'').toString().replace(/[^0-9.-]/g,''));
-    if(isNaN(raw)||raw===0){skipped++;return;}
-    let type='expense';
-    if(tc){const rv=(row[tc]||'').toLowerCase();if(rv.includes('in')||rv.includes('masuk')||rv.includes('kredit'))type='income';}
-    else if(raw>0)type='income';
-    const amt=Math.abs(raw);
-    let date=todayStr();
-    if(dc&&row[dc]){const p=new Date(row[dc]);if(!isNaN(p))date=p.toISOString().slice(0,10);}
-    newBal=type==='income'?newBal+amt:newBal-amt;
-    const id='t'+uid();
-    const catVal=cc&&row[cc]?row[cc]:'other';
-    txRows.push({local:{id,date,desc:row[dsc]||'Impor',type,amount:amt,cat:catVal,walletId:wid,toWalletId:null},remote:{id,date,description:row[dsc]||'Impor',type,amount:amt,cat:catVal,wallet_id:wid,to_wallet_id:null}});
-    added++;
-  });
+  let added=0,skipped=0;
   try{
+    for(const row of rows){
+      let raw=NaN,typeHint=cell(row,cType);
+      if(cAmount)raw=parseMoney(cell(row,cAmount));
+      if((isNaN(raw)||raw===0)&&cCredit){const cr=parseMoney(cell(row,cCredit));if(!isNaN(cr)&&cr!==0){raw=Math.abs(cr);typeHint=typeHint||'income';}}
+      if((isNaN(raw)||raw===0)&&cDebit){const db=parseMoney(cell(row,cDebit));if(!isNaN(db)&&db!==0){raw=-Math.abs(db);typeHint=typeHint||'expense';}}
+      if(isNaN(raw)||raw===0){skipped++;continue;}
+      let type=normType(typeHint,raw);
+      const amt=Math.abs(raw);
+      const wName=cell(row,cWallet)||fallbackWalletName();
+      const fromW=await ensureWalletByName(wName,created);
+      let toW=null;
+      if(type==='transfer'){
+        const toName=cell(row,cToWallet);
+        if(!toName){skipped++;continue;}
+        toW=await ensureWalletByName(toName,created);
+        if(toW.id===fromW.id){skipped++;continue;}
+      }
+      let date=todayStr();
+      const rawDate=cell(row,cDate);
+      if(rawDate){const d=new Date(rawDate);if(!isNaN(d))date=d.toISOString().slice(0,10);else date=rawDate.slice(0,10);}
+      const cat=normalizeCatValue(cell(row,cCat),type);
+      const desc=cell(row,cDesc)||(type==='transfer'?`Transfer ke ${toW?.name||''}`:catBy(cat).l);
+      if(type==='income')fromW.balance=(Number(fromW.balance)||0)+amt;
+      else if(type==='expense')fromW.balance=(Number(fromW.balance)||0)-amt;
+      else{fromW.balance=(Number(fromW.balance)||0)-amt;toW.balance=(Number(toW.balance)||0)+amt;changed.set(toW.id,toW);}
+      changed.set(fromW.id,fromW);
+      const id='t'+uid();
+      txRows.push({
+        local:{id,date,desc,type,amount:amt,cat,walletId:fromW.id,toWalletId:toW?.id||null},
+        remote:{id,date,description:desc,type,amount:amt,cat,wallet_id:fromW.id,to_wallet_id:toW?.id||null}
+      });
+      added++;
+    }
+    if(!added){setSS('ok');alert2('Tidak ada transaksi valid yang bisa diimport','warn');return;}
     for(let i=0;i<txRows.length;i+=50)await dbP('transactions',txRows.slice(i,i+50).map(r=>r.remote));
-    await dbU(`wallets?id=eq.${wid}`,{balance:newBal});
-    w.balance=newBal;
+    await Promise.all([...changed.values()].map(w=>dbU(`wallets?id=eq.${w.id}`,{balance:w.balance})));
     txRows.forEach(r=>transactions.push(r.local));
     transactions.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-    closeM('mcol');setSS('ok');renderAll();
-    alert2(`Import ${added} transaksi ke ${w.name}${skipped?' ('+skipped+' dilewati)':''}`, 'ok');
-  }catch(e){setSS('err');alert2('Gagal import: '+e.message,'err');}
+    setSS('ok');renderAll();
+    const newWalletCount=Object.keys(created).length;
+    alert2(`Import ${added} transaksi berhasil${newWalletCount?' · '+newWalletCount+' dompet baru dibuat':''}${skipped?' · '+skipped+' baris dilewati':''}`,'ok');
+  }catch(e){setSS('err');throw e;}
 }
-
+function ag(h,f){
+  h=h.toLowerCase();
+  return{date:['tanggal','date','tgl','waktu'],desc:['keterangan','deskripsi','desc','nota','note','nama'],amount:['jumlah','amount','nominal','total','debit','kredit'],type:['tipe','type','jenis'],cat:['kategori','category','cat'],wallet:['dompet','wallet','rekening','account']}[f]?.some(k=>h.includes(k));
+}
+async function applyMap(){
+  if(!rawSheet.length){alert2('Tidak ada data import','err');return;}
+  closeM('mcol');
+  await importRowsAuto(rawSheet,'manual-map');
+}
 function exportCSV(){
   const rows=[['Tanggal','Deskripsi','Tipe','Jumlah','Kategori','Dompet','Dompet Tujuan']];
   transactions.forEach(t=>{
     const w=wById(t.walletId),wt2=t.toWalletId?wById(t.toWalletId):null;
     rows.push([t.date,t.desc||'',t.type,t.amount,t.cat||'',w?.name||'',wt2?.name||'']);
   });
-  const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
-  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download='dompetku-'+todayStr()+'.csv';a.click();
-  URL.revokeObjectURL(url);
-  alert2('File CSV berhasil diunduh','ok');
+  downloadCSVFile('dompetku-export-'+todayStr()+'.csv',rows);
+  alert2('Export CSV berhasil diunduh. Format ini bisa langsung di-import lagi.','ok');
 }
 
 // ════════════════════════════════════════
@@ -1556,6 +1785,7 @@ function alert2(msg,type){
 // wallets, transactions, budgets, bills, debts
 // Lihat README atau jalankan SQL di SQL Editor Supabase
 
+initTheme();
 loadAll();
 </script>
 </body>
